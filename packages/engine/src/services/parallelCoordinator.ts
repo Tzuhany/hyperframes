@@ -162,6 +162,7 @@ async function executeWorkerTask(
   onFrameCaptured?: (workerId: number, frameIndex: number) => void,
   onFrameBuffer?: (frameIndex: number, buffer: Buffer) => Promise<void>,
   config?: Partial<EngineConfig>,
+  frameStartOffset = 0,
 ): Promise<WorkerResult> {
   const startTime = Date.now();
   let framesCaptured = 0;
@@ -185,7 +186,7 @@ async function executeWorkerTask(
       if (signal?.aborted) {
         throw new Error("Parallel worker cancelled");
       }
-      const time = i / captureOptions.fps;
+      const time = (i + frameStartOffset) / captureOptions.fps;
 
       if (onFrameBuffer) {
         // Streaming mode: capture to buffer and invoke callback
@@ -235,6 +236,7 @@ export async function executeParallelCapture(
   onProgress?: (progress: ParallelProgress) => void,
   onFrameBuffer?: (frameIndex: number, buffer: Buffer) => Promise<void>,
   config?: Partial<EngineConfig>,
+  frameStartOffset = 0,
 ): Promise<WorkerResult[]> {
   const totalFrames = tasks.reduce((sum, t) => sum + (t.endFrame - t.startFrame), 0);
   const workerProgress = new Map<number, number>();
@@ -267,6 +269,7 @@ export async function executeParallelCapture(
         onFrameCaptured,
         onFrameBuffer,
         config,
+        frameStartOffset,
       ),
     ),
   );

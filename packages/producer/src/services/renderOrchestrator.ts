@@ -1117,6 +1117,7 @@ async function executeDiskCaptureWithAdaptiveRetry(options: {
   onProgress?: (progress: ParallelProgress) => void;
   cfg: EngineConfig;
   log: ProducerLogger;
+  frameStartOffset?: number;
 }): Promise<CaptureAttemptSummary[]> {
   const attempts: CaptureAttemptSummary[] = [];
   let currentWorkers = options.initialWorkerCount;
@@ -1166,6 +1167,7 @@ async function executeDiskCaptureWithAdaptiveRetry(options: {
               : undefined,
             undefined,
             options.cfg,
+            options.frameStartOffset ?? 0,
           );
         } finally {
           await mergeWorkerFrames(attemptWorkDir, tasks, options.framesDir);
@@ -3609,6 +3611,7 @@ export async function executeRenderJob(
               },
               onFrameBuffer,
               cfg,
+              frameStartOffset,
             );
 
             if (probeSession) {
@@ -3713,6 +3716,7 @@ export async function executeRenderJob(
               },
               cfg,
               log,
+              frameStartOffset,
             });
             captureAttempts.push(...attempts);
             const lastAttempt = attempts[attempts.length - 1];
