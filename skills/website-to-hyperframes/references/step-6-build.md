@@ -12,12 +12,14 @@
 
 **Before dispatching sub-agents, prepare two things:**
 
-**1. Build the @font-face block.** Sub-agents will not figure out font-file-to-family mapping on their own (proven by testing — 2 out of 3 sites ship with zero @font-face when agents are left to do it themselves). Build it for them:
+**1. Build the @font-face block for brand fonts.** Common fonts (Inter, Roboto, JetBrains Mono, Poppins, Lato, etc.) are auto-resolved by the HyperFrames renderer at render time — you do NOT need @font-face for those. But brand-specific fonts captured from the website (GT Walsheim, Aeonik, Feature Deck, etc.) need explicit @font-face because the renderer can't find them.
 
-1. Read DESIGN.md to get font family names and weights
-2. Run `ls capture/assets/fonts/` to get the `.woff2` filenames
-3. Map each filename to its family and weight (e.g., `Inter-Medium.woff2` → Inter, weight 500)
-4. Write the complete `@font-face` CSS block and save it for pasting into every sub-agent prompt
+To build the block:
+
+1. Read `capture/extracted/tokens.json` — it has the font families and weights extracted from the site
+2. Run `ls capture/assets/fonts/` — check if any filenames contain recognizable font names (e.g., `gt-walsheim-medium.woff2`). Hashed filenames (like `NGSnv5HMAFg6IuG.woff2`) are Google Fonts subsets that the renderer fetches automatically — skip those.
+3. For each brand font with a recognizable filename, write an @font-face rule mapping it to the family name from tokens.json
+4. If ALL font files are hashed, the fonts are likely all from Google Fonts and will be auto-resolved. Skip the @font-face block entirely.
 
 **2. Build the asset inventory for this beat.** For each beat, list the exact assets the storyboard assigned with their `../capture/assets/` paths. This is what gets pasted into the sub-agent prompt.
 
@@ -185,28 +187,41 @@ In the root `index.html`:
 
 - **Narration**: `<audio id="narration" src="narration.wav" data-start="0" data-duration="..." data-track-index="0" data-volume="1">`
 - **Underscore/music** (if storyboard specifies): `<audio id="underscore" src="underscore.mp3" data-start="0" data-duration="..." data-track-index="3" data-volume="0.15">`
-- **SFX**: Copy the bundled SFX library to the project: `cp -r skills/website-to-hyperframes/assets/sfx/ <project-dir>/sfx/` (or if the skill is installed elsewhere, find it with `ls */website-to-hyperframes/assets/sfx/ 2>/dev/null`). Then wire sound effects at beat boundaries in `index.html`. Each SFX gets its own track index (41+) to avoid conflicts:
+- **SFX**: Copy the bundled SFX library to the project:
+
+```bash
+cp -r skills/website-to-hyperframes/assets/sfx/ <project-dir>/sfx/
+# If skill is installed elsewhere: find . -path "*/website-to-hyperframes/assets/sfx" -exec cp -r {} <project-dir>/sfx/ \;
+ls <project-dir>/sfx/
+```
+
+Now re-read the storyboard and match SFX to the creative moments — don't plan creative around the SFX inventory. For each beat, ask: "what emotion does this moment need?" then pick the sound that serves it:
+
+| Moment type                    | SFX to use                      | Timing                           |
+| ------------------------------ | ------------------------------- | -------------------------------- |
+| Beat transition                | whoosh or whoosh-cinematic      | 0.1s before the cut              |
+| Element appearing              | pop                             | Exact moment of entrance         |
+| UI interaction                 | click or click-soft             | On the action                    |
+| Big text landing / stat reveal | impact-bass-1 or impact-bass-2  | On the final word/number         |
+| Tension building before reveal | riser                           | Start 2-3s before, end at reveal |
+| Success / CTA moment           | chime or sparkle                | On the CTA appearance            |
+| Code / terminal sequence       | typing or key-press             | Aligned to typing animation      |
+| Tech glitch transition         | glitch-1, glitch-2, or glitch-3 | On the cut                       |
+
+Wire each SFX as its own `<audio>` element with a unique track index (41+):
 
 ```html
 <audio
-  id="sfx-whoosh-1"
-  src="sfx/whoosh.mp3"
-  data-start="BEAT2_START"
-  data-duration="1.5"
+  id="sfx-impact-1"
+  src="sfx/impact-bass-1.mp3"
+  data-start="3.2"
+  data-duration="2.1"
   data-track-index="41"
-  data-volume="0.5"
-></audio>
-<audio
-  id="sfx-pop-1"
-  src="sfx/pop.mp3"
-  data-start="REVEAL_TIME"
-  data-duration="0.8"
-  data-track-index="42"
   data-volume="0.4"
 ></audio>
 ```
 
-SFX timing: whoosh 0.1s before a beat transition, pop/click at the moment an element appears, typing aligned to character animation starts, impact on stat counter or hero text landing. Volume 0.2-0.5 — never compete with VO.
+Volume 0.2-0.5 — SFX must never compete with VO.
 
 - **Captions** (optional — only if user requests): sub-composition on a parallel track. Skip unless explicitly asked for.
 

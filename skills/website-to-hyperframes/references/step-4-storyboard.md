@@ -36,14 +36,26 @@ Apple keynote register — economy of words, silence between sentences is a feat
 
 ---
 
-## Capabilities Audit
+## Capabilities Discovery
 
-Before writing any beats, check what tools are available beyond the standard techniques:
+Before writing any beats, run these commands and paste the output below the Global Direction section. This tells you what's available beyond the standard techniques.
 
-1. **HTML-in-Canvas**: The `drawElementImage` Chrome API captures live DOM into a `<canvas>` as a GPU-accelerated texture. This lets you render any HTML/CSS through WebGL shaders, map it onto 3D geometry, or apply post-processing — all at 60fps. HyperFrames auto-enables this during renders. Read `docs/guides/html-in-canvas.mdx` for the API and patterns. Pre-built VFX blocks are available via `npx hyperframes add --tag html-in-canvas` (installs all: vfx-liquid-glass, vfx-iphone-device, vfx-liquid-background, vfx-magnetic, vfx-portal, vfx-shatter, vfx-text-cursor), but you can also build custom effects from scratch using the raw API.
-2. **Texture mask text**: If the `texture-mask-text` component is installed, typographic hero beats can use texture-filled text (wood, stone, metal).
-3. **SFX files**: Check if `sfx/` directory exists. If SFX files are available, plan sound cues per beat — whoosh on transitions, pop on element reveals, typing on code sequences.
-4. **Remove-background**: If person footage exists, `hyperframes remove-background` can isolate subjects for text-behind-person compositing.
+```bash
+# 1. Check installed registry blocks (VFX, transitions, components)
+npx hyperframes list --installed 2>/dev/null || echo "No blocks installed"
+
+# 2. Check available shader transitions
+ls registry/blocks/ 2>/dev/null | grep -E 'chromatic|cinematic|cross-warp|domain-warp|flash|glitch|gravitational|light-leak|ridged|ripple|sdf|swirl|thermal|whip' || echo "No shader transitions in registry"
+
+# 3. Check available VFX blocks
+ls registry/blocks/ 2>/dev/null | grep vfx || echo "No VFX blocks in registry"
+```
+
+If VFX blocks are available (vfx-liquid-glass, vfx-iphone-device, vfx-shatter, vfx-portal, etc.), use them for hero treatments instead of basic perspective tilt. Install any you want with `npx hyperframes add <name>`. If shader transitions are in the registry, use them between beats instead of basic blur/fade — install with `npx hyperframes add <name>`.
+
+**HTML-in-Canvas** (available in all HyperFrames renders): The `drawElementImage` Chrome API captures live DOM into a `<canvas>` as a GPU-accelerated texture. You can render any HTML/CSS through WebGL shaders, map it onto 3D geometry, or apply post-processing — even without VFX blocks. Read `docs/guides/html-in-canvas.mdx` for the API.
+
+Do NOT list SFX files in the storyboard. SFX are wired in Step 6 (Audio Wiring) after compositions are built — matched to the creative direction, not the other way around.
 
 ---
 
