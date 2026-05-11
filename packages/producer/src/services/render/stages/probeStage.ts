@@ -78,7 +78,7 @@ export interface ProbeStageResult {
   /** Composition duration (post-probe). Guaranteed > 0 — the stage throws on <= 0. */
   duration: number;
   totalFrames: number;
-  /** Wall-clock ms for the entire probe phase (0 if `needsBrowser` was false). */
+  /** Wall-clock ms for the entire probe phase (near-zero when `needsBrowser` was false). */
   browserProbeMs: number;
 }
 
