@@ -1,7 +1,7 @@
 name: studio-parity
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 on:
@@ -88,6 +88,39 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+      - name: Publish diff thumbnails to parity-screens branch
+        if: github.event_name == 'pull_request' && always()
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -e
+          DEBUG_DIR="packages/studio/e2e/.debug"
+          WORK_DIR=$(mktemp -d)
+
+          # Resize preview, render, and diff images to 480x270 thumbnails
+          for t in 0 1 2; do
+            for kind in preview render diff; do
+              src="${DEBUG_DIR}/${kind}_t${t}.png"
+              if [ -f "${src}" ]; then
+                ffmpeg -hide_banner -loglevel error -y -i "${src}" \
+                  -vf scale=480:270 "${WORK_DIR}/${kind}_t${t}.png"
+              fi
+            done
+          done
+
+          # Skip if no images were produced
+          ls "${WORK_DIR}"/*.png 2>/dev/null || exit 0
+
+          # Push as orphan commit to parity-screens/pr-{N} branch
+          git -C "${WORK_DIR}" init
+          git -C "${WORK_DIR}" config user.email "github-actions[bot]@users.noreply.github.com"
+          git -C "${WORK_DIR}" config user.name "github-actions[bot]"
+          git -C "${WORK_DIR}" add .
+          git -C "${WORK_DIR}" commit -m "parity screenshots PR #${PR_NUMBER} run ${{ github.run_id }}"
+          git -C "${WORK_DIR}" push --force \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+            "HEAD:refs/heads/parity-screens/pr-${PR_NUMBER}"
+
       - name: Post parity results as PR comment
         if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
@@ -113,6 +146,12 @@ jobs:
             }).join('\n');
 
             const artifactUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const branch = `parity-screens/pr-${context.issue.number}`;
+            const rawBase = `https://raw.githubusercontent.com/${context.repo.owner}/${context.repo.repo}/${branch}`;
+
+            const diffRow = [0, 1, 2]
+              .map(t => `![diff t=${t}s](${rawBase}/diff_t${t}.png)`)
+              .join(' | ');
 
             const body = [
               `## ${header}`,
@@ -121,7 +160,15 @@ jobs:
               '|-------|-----------|--------|',
               rows,
               '',
-              `Threshold: ${threshold} / 255 (≈ 0.78%). [Download preview, render, and diff images](${artifactUrl}).`,
+              `Threshold: ${threshold} / 255 (≈ 0.78%). [Download all images](${artifactUrl}).`,
+              '',
+              '<details><summary>Diff images (luma difference, preview ↔ render)</summary>',
+              '',
+              `| t=0s | t=1s | t=2s |`,
+              `|------|------|------|`,
+              `| ${diffRow} |`,
+              '',
+              '</details>',
             ].join('\n');
 
             await github.rest.issues.createComment({
