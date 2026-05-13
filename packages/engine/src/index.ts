@@ -84,6 +84,7 @@ export {
   cdpSessionCache,
   initTransparentBackground,
   captureAlphaPng,
+  captureAlphaPngBeginFrame,
   applyDomLayerMask,
   removeDomLayerMask,
   DOM_LAYER_MASK_STYLE_ID,

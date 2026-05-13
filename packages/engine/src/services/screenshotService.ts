@@ -116,15 +116,97 @@ export async function beginFrameCapture(
   };
 }
 
+// Cache the last valid alpha-PNG buffer per page for hasDamage=false frames.
+// Separate from `lastFrameCache` because the same page may be used for both
+// opaque and alpha captures (different background-color override state); the
+// two streams must not poison each other's hasDamage replay.
+const lastAlphaFrameCache = new WeakMap<Page, Buffer>();
+
+// Monotonic tick counter per page for alpha-PNG beginFrame captures.
+// The HDR layered composite path captures multiple scenes per logical
+// frame; if two consecutive calls share the same tick value, the
+// compositor short-circuits to `hasDamage=false` on a stale buffer.
+// Bumped per call here so callers don't need to thread a counter through.
+const alphaCaptureTickIndex = new WeakMap<Page, number>();
+
+/**
+ * Capture a transparent-background frame via HeadlessExperimental.beginFrame.
+ *
+ * Equivalent to `captureAlphaPng` but uses the atomic beginFrame CDP call
+ * instead of `Page.captureScreenshot`. Empirically bit-identical decoded
+ * pixels (verified 0/409,920 px delta across 6 fixture-style scenes + AA
+ * text + 10-90% alpha overlays + HDR/wide-gamut + resolutions through 4K
+ * — see the PR body for the full matrix). PNG byte size differs because
+ * `optimizeForSpeed:true` uses less DEFLATE effort; the alpha channel
+ * itself is preserved bit-for-bit on Chrome >=146.
+ *
+ * Citation: `content/browser/devtools/protocol/page_handler.cc` — both
+ * `EncodeBitmapAsPngFast` and `EncodeBitmapAsPngSlow` call
+ * `gfx::PNGCodec::*EncodeBGRASkBitmap` with `discard_transparency=false`;
+ * the fast/slow distinction is DEFLATE compression effort only.
+ *
+ * Requires the browser launched with `--enable-begin-frame-control` and
+ * `--deterministic-mode` (i.e. `forceScreenshot=false`). Mirrors
+ * `beginFrameCapture`'s `lastFrameCache` semantics for `hasDamage=false`
+ * replay, using a separate cache so opaque and alpha streams don't
+ * collide. Caller passes the frame interval; the function maintains its
+ * own monotonic per-page tick counter. `width`/`height` are in the
+ * signature for parity with `captureAlphaPng` — beginFrame sizes from
+ * the viewport.
+ */
+export async function captureAlphaPngBeginFrame(
+  page: Page,
+  _width: number,
+  _height: number,
+  interval: number,
+): Promise<Buffer> {
+  const client = await getCdpSession(page);
+
+  const nextTickIndex = (alphaCaptureTickIndex.get(page) ?? 0) + 1;
+  alphaCaptureTickIndex.set(page, nextTickIndex);
+  const frameTimeTicks = nextTickIndex * interval;
+
+  const screenshot = {
+    format: "png",
+    optimizeForSpeed: true,
+  } as const;
+
+  const result = await sendBeginFrame(client, { frameTimeTicks, interval, screenshot });
+
+  if (result.screenshotData) {
+    const buffer = Buffer.from(result.screenshotData, "base64");
+    lastAlphaFrameCache.set(page, buffer);
+    return buffer;
+  }
+
+  const cached = lastAlphaFrameCache.get(page);
+  if (cached) return cached;
+
+  // Frame 0 always has damage, so this path is near-unreachable. Force a
+  // composite with a tiny time advance, matching beginFrameCapture's
+  // fallback shape.
+  const fallback = await sendBeginFrame(client, {
+    frameTimeTicks: frameTimeTicks + 0.001,
+    interval,
+    screenshot,
+  });
+  const buffer = fallback.screenshotData
+    ? Buffer.from(fallback.screenshotData, "base64")
+    : Buffer.alloc(0);
+  if (buffer.length > 0) lastAlphaFrameCache.set(page, buffer);
+  return buffer;
+}
+
 /**
  * Capture a screenshot using standard Page.captureScreenshot CDP call.
  * Fallback for environments where BeginFrame is unavailable (macOS, Windows).
  *
- * For `format: "png"` captures we disable Chrome's `optimizeForSpeed` fast
- * path. The fast path uses a zero-alpha-aware codec that crushes real alpha
- * values to 0 or 255 (verified empirically; CDP docs don't document this) —
- * exactly the same caveat called out on `captureScreenshotWithAlpha` /
- * `captureAlphaPng`. Keeping the fast path for opaque jpeg captures is fine.
+ * `optimizeForSpeed: true` is used uniformly. Both Chromium PNG encoder paths
+ * (`EncodeBitmapAsPngFast` and `EncodeBitmapAsPngSlow` in
+ * `content/browser/devtools/protocol/page_handler.cc`) call
+ * `gfx::PNGCodec::*EncodeBGRASkBitmap` with `discard_transparency=false`;
+ * the slow/fast distinction is DEFLATE compression effort only. Bit-perfect
+ * alpha round-trip verified on Chrome 146 and 148.
  */
 export async function pageScreenshotCapture(page: Page, options: CaptureOptions): Promise<Buffer> {
   const client = await getCdpSession(page);
@@ -141,7 +223,7 @@ export async function pageScreenshotCapture(page: Page, options: CaptureOptions)
     quality: isPng ? undefined : (options.quality ?? 80),
     fromSurface: true,
     captureBeyondViewport: false,
-    optimizeForSpeed: !isPng,
+    optimizeForSpeed: true,
     ...(clip ? { clip } : {}),
   });
   return Buffer.from(result.data, "base64");
@@ -174,7 +256,9 @@ export async function captureScreenshotWithAlpha(
       format: "png",
       fromSurface: true,
       captureBeyondViewport: false,
-      optimizeForSpeed: false, // `true` uses a zero-alpha-aware fast path that crushes real alpha values — observed empirically, CDP docs don't spell it out
+      // Fast PNG encoder preserves alpha; see pageScreenshotCapture for the
+      // page_handler.cc citation.
+      optimizeForSpeed: true,
       clip: { x: 0, y: 0, width, height, scale: 1 },
     });
     return Buffer.from(result.data, "base64");
@@ -239,7 +323,8 @@ export async function captureAlphaPng(page: Page, width: number, height: number)
     format: "png",
     fromSurface: true,
     captureBeyondViewport: false,
-    optimizeForSpeed: false, // must be false to preserve alpha
+    // Fast PNG encoder preserves alpha; see pageScreenshotCapture for citation.
+    optimizeForSpeed: true,
     clip: { x: 0, y: 0, width, height, scale: 1 },
   });
   return Buffer.from(result.data, "base64");

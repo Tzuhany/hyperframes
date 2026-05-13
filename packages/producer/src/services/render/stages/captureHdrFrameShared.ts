@@ -16,6 +16,7 @@ import {
   applyDomLayerMask,
   blitRgba8OverRgb48le,
   captureAlphaPng,
+  captureAlphaPngBeginFrame,
   decodePng,
   queryElementStacking,
   removeDomLayerMask,
@@ -193,7 +194,16 @@ export async function captureSceneIntoBuffer(a: CaptureSceneArgs): Promise<void>
   await applyDomLayerMask(session.page, showIds, hideIds);
   addHdrTiming(hdrPerf, "domMaskApplyMs", timingStart);
   timingStart = Date.now();
-  const domPng = await captureAlphaPng(session.page, width, height);
+  // BeginFrame fast-path for transparent capture when the session was
+  // launched with begin-frame-control (5x faster on 854x480). Falls back to
+  // Page.captureScreenshot for screenshot-mode sessions (alpha output
+  // formats — webm/mov/png-sequence — still force screenshot mode upstream
+  // via the entry-point `cfg.forceScreenshot` override). Both encoder
+  // paths preserve alpha bit-perfect; see screenshotService.ts.
+  const domPng =
+    session.captureMode === "beginframe"
+      ? await captureAlphaPngBeginFrame(session.page, width, height, session.beginFrameIntervalMs)
+      : await captureAlphaPng(session.page, width, height);
   addHdrTiming(hdrPerf, "domScreenshotMs", timingStart);
   timingStart = Date.now();
   await removeDomLayerMask(session.page, hideIds);

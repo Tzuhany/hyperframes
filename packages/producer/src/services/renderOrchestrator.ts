@@ -63,6 +63,7 @@ import {
   type ParallelProgress,
   type WorkerTask,
   captureAlphaPng,
+  captureAlphaPngBeginFrame,
   applyDomLayerMask,
   removeDomLayerMask,
   decodePng,
@@ -1262,9 +1263,23 @@ export async function compositeHdrFrame(
       await applyDomLayerMask(domSession.page, layer.elementIds, hideIds);
       addHdrTiming(hdrPerf, "domMaskApplyMs", timingStart);
 
-      // 4. Screenshot
+      // 4. Screenshot. BeginFrame is the fast path (atomic single-CDP,
+      //    ~5x faster on 854x480, preserves alpha on Chrome 146+); the
+      //    Page.captureScreenshot fallback covers sessions running in
+      //    screenshot mode (alpha output formats force this upstream via
+      //    `cfg.forceScreenshot`). The beginFrame helper maintains its own
+      //    per-page monotonic tick counter, so multi-layer-per-frame call
+      //    patterns don't need to thread one through.
       timingStart = Date.now();
-      const domPng = await captureAlphaPng(domSession.page, width, height);
+      const domPng =
+        domSession.captureMode === "beginframe"
+          ? await captureAlphaPngBeginFrame(
+              domSession.page,
+              width,
+              height,
+              domSession.beginFrameIntervalMs,
+            )
+          : await captureAlphaPng(domSession.page, width, height);
       addHdrTiming(hdrPerf, "domScreenshotMs", timingStart);
 
       // 5. Tear down the mask

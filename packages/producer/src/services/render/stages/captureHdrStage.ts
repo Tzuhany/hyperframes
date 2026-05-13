@@ -210,6 +210,7 @@ export async function runCaptureHdrStage(
   // caller config.)
   const hdrCfg: EngineConfig = { ...cfg, forceScreenshot: true };
 
+
   if (!fileServer) throw new Error("fileServer must be initialized before HDR compositing");
 
   // Plan HDR resources (videos to extract, images to decode, layout-probe
