@@ -48,10 +48,15 @@ import {
   type CaptureSession,
   closeCaptureSession,
   createCaptureSession,
+  createFrameLookupTable,
+  createVideoFrameInjector,
   type EngineConfig,
+  type ExtractedFrames,
   getEncoderPreset,
   initializeSession,
   resolveConfig,
+  type VideoElement,
+  type VideoMetadata,
 } from "@hyperframes/engine";
 import { defaultLogger } from "../../logger.js";
 import { runEncodeStage } from "../render/stages/encodeStage.js";
@@ -124,6 +129,90 @@ export interface ChunkResult {
    * inspectable without the workflow having to carry the payload.
    */
   perfPath: string;
+}
+
+/**
+ * On-disk shape of `<planDir>/meta/videos.json` written by `plan()`.
+ * Mirrored from `plan.ts`'s internal `PlanVideosJson` — duplicated here so
+ * `renderChunk` doesn't import from `plan.ts` (which would create a cycle).
+ */
+interface PlanVideosJson {
+  videos: VideoElement[];
+  extracted: Array<{
+    videoId: string;
+    srcPath: string;
+    framePattern: string;
+    fps: number;
+    totalFrames: number;
+    metadata: VideoMetadata;
+  }>;
+}
+
+/**
+ * Rebuild the engine's in-memory `ExtractedFrames[]` from the on-disk
+ * planDir layout. `plan()` wrote a serialized manifest of which videos
+ * exist + per-video frame counts; `<planDir>/video-frames/<videoId>/`
+ * holds the actual numbered frame files. This walks each video's output
+ * directory, populates the `framePaths` Map keyed by 1-based frame index
+ * (the convention `videoFrameInjector` and `FrameLookupTable` both rely
+ * on), and returns the structures ready to feed back into
+ * `createFrameLookupTable`.
+ *
+ * Pure: no Chrome involvement, no engine launch. Used by `renderChunk`
+ * once per chunk to recreate the BeforeCaptureHook the in-process
+ * renderer produces from a live extraction stage.
+ */
+function rebuildExtractedFramesFromPlanDir(
+  planDir: string,
+  videos: PlanVideosJson["extracted"],
+): ExtractedFrames[] {
+  const result: ExtractedFrames[] = [];
+  for (const v of videos) {
+    const outputDir = join(planDir, "video-frames", v.videoId);
+    if (!existsSync(outputDir)) {
+      throw new Error(
+        `[renderChunk] planDir missing extracted video frames for ${JSON.stringify(v.videoId)}: ` +
+          `${outputDir} not present. plan() should have written frames here; the planDir is malformed.`,
+      );
+    }
+    // The framePattern from extractAllVideoFrames looks like
+    // `frame_%06d.jpg`. We can't sprintf at runtime, so list the dir and
+    // index by sorted name — the encoder writes frame_NNNNNN.<ext> in
+    // monotonic order, so sorted-by-name is also sorted-by-frame-index.
+    const ext = v.framePattern.includes(".")
+      ? v.framePattern.slice(v.framePattern.lastIndexOf(".")).toLowerCase()
+      : ".jpg";
+    const frames = readdirSync(outputDir)
+      .filter((name) => name.toLowerCase().endsWith(ext))
+      .sort();
+    const framePaths = new Map<number, string>();
+    for (let i = 0; i < frames.length; i++) {
+      const frameName = frames[i];
+      if (!frameName) continue;
+      // FrameLookupTable / videoFrameInjector index frames 1-based; the
+      // extractor writes frame_000001, frame_000002, ... so the on-disk
+      // names are already 1-based but we use the sorted-list position to
+      // be tolerant of gaps.
+      framePaths.set(i + 1, join(outputDir, frameName));
+    }
+    result.push({
+      videoId: v.videoId,
+      srcPath: v.srcPath,
+      outputDir,
+      framePattern: v.framePattern,
+      fps: v.fps,
+      totalFrames: v.totalFrames,
+      metadata: v.metadata,
+      framePaths,
+      // The chunk worker doesn't own the planDir's video-frames/ directory
+      // (the controller does — adapters that fan out chunks across machines
+      // share the planDir as read-only). Mark ownership as false so the
+      // injector's eventual cleanup doesn't rm bytes another worker may
+      // still be reading.
+      ownedByLookup: false,
+    });
+  }
+  return result;
 }
 
 /** Plan-time JSON manifest written by `freezePlan`. */
@@ -258,6 +347,23 @@ export async function renderChunk(
   const plan = JSON.parse(readFileSync(planJsonPath, "utf-8")) as PlanJson;
   const encoder = JSON.parse(readFileSync(encoderJsonPath, "utf-8")) as LockedRenderConfig;
   const chunks = JSON.parse(readFileSync(chunksJsonPath, "utf-8")) as ChunkSliceJson[];
+
+  // Optional: `meta/videos.json` is present whenever the composition has
+  // `<video>` elements. Absence is fine — compositions without video skip
+  // the frame-extraction stage entirely and don't need an injector.
+  // Presence drives the BeforeCaptureHook below.
+  const videosJsonPath = join(planDir, "meta", "videos.json");
+  let planVideos: PlanVideosJson | null = null;
+  if (existsSync(videosJsonPath)) {
+    try {
+      planVideos = JSON.parse(readFileSync(videosJsonPath, "utf-8")) as PlanVideosJson;
+    } catch (err) {
+      throw new RenderChunkValidationError(
+        MISSING_PLAN_ARTIFACT,
+        `[renderChunk] failed to parse ${videosJsonPath}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
 
   if (chunkIndex < 0 || chunkIndex >= chunks.length) {
     throw new RenderChunkValidationError(
@@ -464,7 +570,20 @@ export async function renderChunk(
         needsAlpha: plan.dimensions.format !== "mp4",
         captureAttempts: [],
         buildCaptureOptions: () => captureOptions,
-        createRenderVideoFrameInjector: () => null,
+        // Rebuild the in-process renderer's video-frame injector from the
+        // planDir's `meta/videos.json` + `video-frames/<id>/`. Without
+        // this, the chunk worker's page falls back to letting Chrome's
+        // native `<video>` element decode the source mp4 against the
+        // virtual clock, which produces ±1-frame drift relative to the
+        // in-process renderer that pre-extracts frames and injects them
+        // as images. Compositions with no `<video>` elements get a
+        // null injector (no overhead, same as in-process).
+        createRenderVideoFrameInjector: () => {
+          if (!planVideos || planVideos.extracted.length === 0) return null;
+          const extracted = rebuildExtractedFramesFromPlanDir(planDir, planVideos.extracted);
+          const frameLookup = createFrameLookupTable(planVideos.videos, extracted);
+          return createVideoFrameInjector(frameLookup);
+        },
         abortSignal: undefined,
         assertNotAborted: () => {},
         frameRange: { startFrame: slice.startFrame, endFrame: slice.endFrame },

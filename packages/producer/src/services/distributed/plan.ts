@@ -24,10 +24,24 @@
  * never have to handle them.
  */
 
-import { cpSync, existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { type CanvasResolution } from "@hyperframes/core";
-import { type EngineConfig, resolveConfig } from "@hyperframes/engine";
+import {
+  type EngineConfig,
+  type ExtractedFrames,
+  resolveConfig,
+  type VideoElement,
+} from "@hyperframes/engine";
 import { defaultLogger, type ProducerLogger } from "../../logger.js";
 import { runAudioStage } from "../render/stages/audioStage.js";
 import { runCompileStage } from "../render/stages/compileStage.js";
@@ -420,6 +434,42 @@ function buildLockedRenderConfig(input: {
 }
 
 /**
+ * Persisted shape of the video-extraction outputs from `runExtractVideosStage`,
+ * written to `<planDir>/meta/videos.json` for `renderChunk` to reconstruct
+ * a `FrameLookupTable` from. The in-process renderer keeps these structures
+ * in memory; the distributed pipeline writes them out so a separate chunk
+ * worker process can rebuild the video-frame injector without re-running
+ * the extract stage.
+ *
+ * `ExtractedFrames` from the engine carries an absolute `outputDir`,
+ * an open file descriptor in some paths, and a `framePaths` map — none of
+ * those survive a serialize → re-deserialize round trip across processes.
+ * The serialized form keeps only what plan-time produced and lets
+ * `renderChunk` re-derive `outputDir` (always `<planDir>/video-frames/<videoId>`)
+ * and `framePaths` (re-listed from that directory).
+ */
+interface PlanVideosJson {
+  /**
+   * Composition's `<video>` elements in document order. Identical to
+   * `composition.videos` from `compileForRender` — the chunk worker uses
+   * this to drive `createFrameLookupTable`'s time/index math.
+   */
+  videos: VideoElement[];
+  /**
+   * Per-video extraction outputs. `outputDir` is omitted — `renderChunk`
+   * reconstructs it from `<planDir>/video-frames/<videoId>/`.
+   */
+  extracted: Array<{
+    videoId: string;
+    srcPath: string;
+    framePattern: string;
+    fps: number;
+    totalFrames: number;
+    metadata: ExtractedFrames["metadata"];
+  }>;
+}
+
+/**
  * Per-format encoder + pixel-format + preset triple. Distributed mode is
  * SDR-only: H.264 8-bit for mp4, ProRes 4444 for mov, raw RGBA for
  * png-sequence.
@@ -602,7 +652,15 @@ export async function plan(
     assertNotAborted,
     materializeSymlinks: true,
   });
-  if (extractResult.frameLookup) extractResult.frameLookup.cleanup();
+  // DO NOT call `extractResult.frameLookup.cleanup()` here. cleanup()
+  // rm-rfs each video's outputDir, which for the in-process renderer is
+  // a scratch tree the orchestrator owns. In plan(), that "scratch" tree
+  // (`compiledDir/__hyperframes_video_frames/<videoId>/`) IS the source
+  // material for `planDir/video-frames/`; cleanup before the rename
+  // leaves the planDir with only the `_downloads/` subdirectory and no
+  // actual per-video frame files, and the chunk worker can't reconstruct
+  // the BeforeCaptureHook without them. The renames below move the tree
+  // into its final planDir location.
 
   // ── Audio ──
   const audioResult = await runAudioStage({
@@ -632,6 +690,31 @@ export async function plan(
 
   if (existsSync(finalCompiledDir)) rmSync(finalCompiledDir, { recursive: true, force: true });
   renameSync(compiledDir, finalCompiledDir);
+
+  // Persist the video-extraction outputs alongside the rest of the planDir
+  // metadata so `renderChunk` can rebuild the BeforeCaptureHook that
+  // injects pre-extracted frames into the page. Without this file the
+  // chunk worker has no way to recover the per-video frame timing and
+  // falls back to letting Chrome's native `<video>` element decode the
+  // source mp4 on the fly — which produces ±1-frame drift relative to
+  // the in-process renderer's pre-extracted injection (the source of
+  // every committed baseline). Writing this file is the contract that
+  // makes distributed renders pixel-comparable to in-process renders for
+  // compositions with video sources.
+  const planVideosJson: PlanVideosJson = {
+    videos: composition.videos,
+    extracted: (extractResult.extractionResult?.extracted ?? []).map((ext) => ({
+      videoId: ext.videoId,
+      srcPath: ext.srcPath,
+      framePattern: ext.framePattern,
+      fps: ext.fps,
+      totalFrames: ext.totalFrames,
+      metadata: ext.metadata,
+    })),
+  };
+  const metaDir = join(planDir, "meta");
+  if (!existsSync(metaDir)) mkdirSync(metaDir, { recursive: true });
+  writeFileSync(join(metaDir, "videos.json"), JSON.stringify(planVideosJson, null, 2), "utf-8");
 
   const planAudioPath = join(planDir, "audio.aac");
   if (audioResult.hasAudio && existsSync(audioResult.audioOutputPath)) {
