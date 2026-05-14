@@ -36,7 +36,7 @@ Read these before generating options — they define the rules your options must
 
 Each architecture object must include a `preview_html` field — the HTML that renders in the preview panel. Use token placeholders that the template replaces at runtime: `{{bg}}`, `{{fg}}`, `{{ac}}`, `{{mt}}`, `{{hf}}`, `{{hw}}`, `{{bf}}`, `{{bw}}`, `{{cr}}` (corner radius), `{{pad}}`, `{{gap}}`, `{{shadow}}`, `{{g}}` (grid line color), `{{fg3}}`/`{{fg6}}`/`{{fg8}}`/`{{fg15}}` (fg at opacity), `{{ac3}}`/`{{ac5}}`/`{{ac25}}` (accent at opacity).
 
-**Use tokens where they apply.** Not every architecture needs every token — a minimal layout won't have cards or buttons. Tokens that aren't used simply won't have a visible effect when changed in Phase 2.
+**Use tokens everywhere — never hardcode colors, fonts, spacing, or radii.** The preview updates live as the user changes options in Phase 2. If you write `padding: 80px` instead of `padding: {{pad}}`, changing the density option does nothing. If you write `color: #CC2200` instead of `color: {{ac}}`, changing the palette does nothing. Every color, font-family, font-weight, padding, gap, border-radius, and shadow MUST use tokens. The only exception is structural values like `width: 1920px` or `flex: 1`.
 
 **Density matches the concept.** The preview should look like a real frame from the actual video — not a UI component showcase. A single-stat direction has 2-3 elements. A data-grid direction has 12+. Match the architecture's intent.
 
