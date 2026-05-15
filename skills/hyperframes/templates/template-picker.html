@@ -585,7 +585,17 @@ function selectTemplate(slug) {
   var card = document.getElementById("card-" + slug);
   var overlay = document.getElementById("trans-overlay");
   overlay.classList.add("active");
-  if (card) card.classList.add("selected-exit");
+  if (card) {
+    var rect = card.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var ox = ((vw / 2 - cx) / rect.width * 100 + 50) + "%";
+    var oy = ((vh / 2 - cy) / rect.height * 100 + 50) + "%";
+    card.style.transformOrigin = ox + " " + oy;
+    card.classList.add("selected-exit");
+  }
 
   setTimeout(function() {
     if (window.parent !== window) {
