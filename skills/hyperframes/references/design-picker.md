@@ -216,6 +216,8 @@ Generate a JSON object with three keys. This is the creative work — match ever
 
 **`palettes`** — 6 color palettes themed to the prompt. Always include `{"name":"Default", "bg":"__DEFAULT__"}` as the first entry (preserves original template colors). Each non-default palette has: `name`, `bg`, `fg`, `ac` (accent), `mt` (muted). Name palettes after the prompt's world, not generic labels.
 
+When generating `pick-design.html` for the fine-tune step, also include a "Template Original" palette as the first entry in the `PALETTES` array. Extract the template's native colors from its `:root` CSS variables so the user can revert after trying other palettes.
+
 **`prompt_text`** — text pools for injecting into templates. Every template gets its placeholder text replaced with prompt-contextual content. The pools:
 
 | Key          | What it is                                                                           | Count needed | Example (for a coffee brand)                                                |
