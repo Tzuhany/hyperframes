@@ -2497,7 +2497,17 @@
         var tabMood = document.getElementById("tab-mood");
         if (tabMood) {
           tabMood.textContent = "← Template";
-          tabMood.onclick = function() { showPhase("mood"); };
+          tabMood.onclick = function() {
+            showPhase("mood");
+            // Clear transition overlay in the embedded picker
+            var pf = document.getElementById("template-picker-frame");
+            if (pf && pf.contentDocument) {
+              var ov = pf.contentDocument.getElementById("trans-overlay");
+              if (ov) ov.classList.remove("active");
+              // Reset any selected-exit cards
+              pf.contentDocument.querySelectorAll(".selected-exit").forEach(function(c) { c.classList.remove("selected-exit"); });
+            }
+          };
         }
 
         selectedMood = 0;
