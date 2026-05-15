@@ -390,8 +390,23 @@ function showSlide(doc, slides, mode, idx) {
     if (target) target.scrollIntoView({behavior: "instant", inline: "start", block: "start"});
   } else {
     slides.forEach(function(sl, i) {
-      if (i === idx) { sl.classList.add("active"); sl.style.display = ""; sl.style.visibility = "visible"; sl.style.opacity = "1"; sl.style.position = ""; }
-      else { sl.classList.remove("active"); sl.style.visibility = "hidden"; sl.style.opacity = "0"; }
+      if (i === idx) {
+        sl.classList.add("active");
+        sl.style.display = "";
+        sl.style.visibility = "visible";
+        sl.style.opacity = "1";
+        sl.style.position = "";
+        // Reset any animation start states within this slide
+        sl.querySelectorAll("*").forEach(function(el) {
+          try {
+            if (el.style.opacity === "0" || window.getComputedStyle(el).opacity === "0") el.style.opacity = "1";
+            if (el.style.visibility === "hidden") el.style.visibility = "visible";
+          } catch(e) {}
+        });
+      } else {
+        sl.classList.remove("active");
+        sl.style.visibility = "hidden";
+      }
     });
   }
 }
