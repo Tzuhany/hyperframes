@@ -126,6 +126,24 @@ Update STORYBOARD.md with real durations. Replace estimated times (e.g., "0:00-0
 
 Beat boundaries land on word onsets — hard cuts to the VO.
 
+## Timing reconciliation — required before Step 5
+
+After mapping all beats, compare real total audio duration against the storyboard's planned duration:
+
+```
+real_total = last_word.end + cta_hold (typically 2–3s)
+planned_total = sum of all beat planned durations
+delta = |real_total - planned_total|
+```
+
+**If delta > 15% of planned total — do not proceed to Step 5 without resolving it.** Common causes and fixes:
+
+- **Audio shorter than planned (most common with Kokoro):** Kokoro generates compressed speech with minimal pauses. Proportionally scale all non-CTA beat durations down to match the real audio. Example: planned 30s, audio 19s — multiply each beat duration by 19/30 (excluding the CTA hold). Update STORYBOARD.md.
+- **Audio much longer than planned (>30% over):** The script was too long for the intended duration. Trim the script (remove one beat's VO), regenerate audio, re-transcribe.
+- **CTA beat timing:** The CTA beat should hold for 2–3 seconds after the last spoken word — not extend to fill empty time. `cta_start = last_word.end + 0.3s`, `cta_duration = 2.5s`. Hard cap. Dead silence after the CTA hold loses the viewer.
+
+**Always tell the user** if you adjusted durations significantly from the storyboard plan. They approved a specific beat structure — if it changed, they need to know.
+
 ## Captions
 
 After the narration is generated and transcribed, ask the user:

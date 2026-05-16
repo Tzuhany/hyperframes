@@ -51,7 +51,8 @@ interface GsapTimeline {
 
 export interface TransitionConfig {
   time: number;
-  shader: ShaderName;
+  /** Omit to use a CSS crossfade instead of a WebGL shader. */
+  shader?: ShaderName;
   duration?: number;
   ease?: string;
 }
@@ -98,7 +99,7 @@ interface CachedTransition {
   duration: number;
   fromId: string;
   toId: string;
-  prog: WebGLProgram;
+  prog: WebGLProgram | null; // null for CSS-fallback transitions
   frames: CachedTransitionFrame[];
   cacheKey: string;
   dirty: boolean;
@@ -823,7 +824,7 @@ export function init(config: HyperShaderConfig): GsapTimeline {
   interface HfTransitionMeta {
     time: number;
     duration: number;
-    shader: string;
+    shader?: string; // undefined = CSS crossfade (no WebGL required)
     ease: string;
     fromScene: string;
     toScene: string;
@@ -900,6 +901,7 @@ export function init(config: HyperShaderConfig): GsapTimeline {
 
   const programs = new Map<string, WebGLProgram>();
   for (const t of transitions) {
+    if (!t.shader) continue; // CSS-only transitions have no WebGL program
     if (!programs.has(t.shader)) {
       try {
         programs.set(t.shader, createProgram(gl, getFragSource(t.shader)));
@@ -1162,7 +1164,7 @@ export function init(config: HyperShaderConfig): GsapTimeline {
     renderShader(
       gl,
       quadBuf,
-      state.prog,
+      state.prog!, // non-null: fallback path returns before reaching here
       interpolatedFromTex,
       interpolatedToTex,
       state.progress,
@@ -1291,8 +1293,11 @@ export function init(config: HyperShaderConfig): GsapTimeline {
     const toId = scenes[i + 1];
     if (!fromId || !toId) continue;
 
-    const prog = programs.get(t.shader);
-    if (!prog) continue;
+    // CSS-only transition when shader is omitted — uses the fallback opacity
+    // crossfade path. No WebGL program or texture prewarming needed.
+    const isCssFallback = !t.shader;
+    const prog = isCssFallback ? null : (programs.get(t.shader!) ?? null);
+    if (!isCssFallback && !prog) continue; // shader requested but not compiled
 
     const dur = t.duration ?? DEFAULT_DURATION;
     const ease = t.ease ?? DEFAULT_EASE;
@@ -1307,10 +1312,10 @@ export function init(config: HyperShaderConfig): GsapTimeline {
       prog,
       frames: [],
       cacheKey: "",
-      dirty: true,
-      ready: false,
-      fallback: false,
-      persisted: false,
+      dirty: !isCssFallback,
+      ready: isCssFallback, // CSS fallback needs no prewarming
+      fallback: isCssFallback,
+      persisted: isCssFallback,
       textureReady: false,
       texturePromise: null,
       textureGeneration: 0,

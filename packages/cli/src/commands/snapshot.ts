@@ -156,13 +156,40 @@ async function captureSnapshots(
         .catch(() => {});
 
       // Wait for shader transition pre-rendering to complete (if active).
-      // HyperShader shows a loading overlay with [data-hyper-shader-loading]
-      // while it samples scene textures. Snapshots taken during loading show
-      // the "Preparing scene transitions" screen instead of actual content.
+      //
+      // Two failure modes existed with the previous overlay-only check:
+      //   1. Cold cache: HyperShader creates [data-hyper-shader-loading] but never
+      //      removes it from the DOM — it only sets display:none. Checking for
+      //      element *absence* never resolved, so the wait always timed out at 60s.
+      //   2. Warm cache: HyperShader loads frames from IndexedDB without showing
+      //      the overlay at all. Checking for element absence resolved instantly
+      //      (no element) while hydration was still running in the background.
+      //
+      // Fix: use window.__hf.shaderTransitions[].ready as the primary signal
+      // (set after both warm and cold cache paths complete), with the overlay
+      // display:none as a fallback for older builds that lack the ready state.
       await page
-        .waitForFunction(() => !document.querySelector("[data-hyper-shader-loading]"), {
-          timeout: 60_000,
-        })
+        .waitForFunction(
+          () => {
+            const win = window as unknown as {
+              __hf?: { shaderTransitions?: Record<string, { ready?: boolean }> };
+            };
+            // Primary: HyperShader ready state — authoritative for both cache paths
+            const shaderTransitions = win.__hf?.shaderTransitions;
+            if (shaderTransitions !== undefined) {
+              return Object.values(shaderTransitions).every((s) => s.ready === true);
+            }
+            // Fallback: overlay visibility (older builds without ready state).
+            // Check display:none rather than element absence — element stays in
+            // the DOM when hidden.
+            const overlay = document.querySelector(
+              "[data-hyper-shader-loading]",
+            ) as HTMLElement | null;
+            if (!overlay) return true;
+            return window.getComputedStyle(overlay).display === "none";
+          },
+          { timeout: 90_000 },
+        )
         .catch(() => {});
 
       // Extra settle time for media, fonts, and animations to initialize

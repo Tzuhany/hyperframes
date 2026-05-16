@@ -87,28 +87,28 @@ ls registry/blocks/ 2>/dev/null | grep vfx || echo "No VFX blocks installed"
 npx hyperframes catalog --type block 2>/dev/null | head -40
 ```
 
-There might be VFX blocks available (vfx-liquid-glass, vfx-iphone-device, vfx-shatter, vfx-portal, etc.), use them for hero treatments instead of basic perspective tilt. You need to install any you want with `npx hyperframes add <name>`. Shader transitions are in the registry, use them between beats instead of basic blur/fade — install with `npx hyperframes add <name>`. - don't use too many shaders, maximum 2 per video unless user wants differently.
+There might be VFX blocks available (vfx-liquid-glass, vfx-iphone-device, vfx-shatter, vfx-portal, etc.), use them for hero treatments instead of basic perspective tilt. You need to install any you want with `npx hyperframes add <name>`. Shader transitions are in the registry, use them between beats instead of basic blur/fade — install with `npx hyperframes add <name>`. Don't use too many shaders — maximum 2 per video unless user wants differently.
 
-**HTML-in-Canvas** (available in all HyperFrames renders): The `drawElementImage` Chrome API captures live DOM into a `<canvas>` as a GPU-accelerated texture. You can render any HTML/CSS through WebGL shaders, map it onto 3D geometry, or apply post-processing — even without VFX blocks. Required to read `docs/guides/html-in-canvas.mdx` for the API.
+### HTML-in-Canvas — plan for it here, build in Step 5
 
-Describe SFX intent per beat (what kind of sound at what moment — "bass impact on reveal", "soft chime on logo"), but don't worry about exact filenames. The actual SFX file selection happens in Step 5 (Build) using `sfx/manifest.json`.
+The `drawElementImage` Chrome API captures any live HTML/CSS as a GPU-accelerated texture at 60fps. This is HyperFrames' highest-impact capability — it lets you render captured product screenshots or UI through:
 
-### HTML-in-Canvas — the most powerful visual tool
+- **3D geometry** — a rotating iPhone or laptop model, a sphere, a curved surface
+- **WebGL shaders** — liquid glass refraction, shatter into fragments, portal reveal, noise distortion
+- **Post-processing** — bloom, depth-of-field, film grain, color grading
 
-This is HyperFrames' standout capability. The `drawElementImage` API captures any live HTML/CSS as a GPU-accelerated texture at 60fps. This means you can take a captured product screenshot, a dashboard UI, a code snippet — any HTML content — and render it through:
+When planning beats, decide which ones deserve an HTML-in-Canvas treatment vs. a standard GSAP animation. If you want it, name it in the storyboard — Step 5 will read `html-in-canvas-patterns.md` for implementation. You don't need to specify the API details here.
 
-- **3D geometry** — map it onto a rotating iPhone or laptop model, wrap it around a sphere, project it onto a curved surface and more
-- **WebGL shaders** — liquid glass refraction, shatter into fragments, portal reveal, magnetic assembly, noise distortion, chromatic aberration
-- **Post-processing** — bloom, depth-of-field, film grain, color grading — all running in real-time on the GPU
-- **Custom effects** — anything you can write in Three.js or raw WebGL
+### SFX assignment — happens here, not in Step 5
 
-You can also search/research anything possible and either download or ask the user to download something for you for a better result. Asking the user to provide something is fine — do it when it would meaningfully improve the video.
+**Before writing beats,** read `skills/website-to-hyperframes/assets/sfx/manifest.json` (or your local copy at `sfx/manifest.json` if already copied to the project). Each entry has a filename, duration in seconds, and description. Assign **specific SFX files** to exact moments in the storyboard. Step 5 implements what you specify here — it makes no SFX decisions.
 
-When planning the storyboard, think about which beats deserve a cinematic HTML-in-Canvas treatment and how exactly vs a standard GSAP animation.
+Per beat, specify SFX like:
 
-The API pattern: put HTML inside `<canvas layoutsubtree>`, call `ctx.drawElementImage(element, x, y, w, h)`, use as a Three.js `CanvasTexture`. HyperFrames auto-enables the Chrome flag during renders. Read `docs/guides/html-in-canvas.mdx` for code patterns. Pre-built examples exist via `npx hyperframes add --tag html-in-canvas`, or build custom effects from scratch. Spawn a sub-agent for complex Three.js/WebGL work if needed.
+- `sfx/impact-bass-1.mp3` at `0.2s`, volume `0.35` — on the hero image snapping into frame
+- `sfx/chime.mp3` at `3.8s`, volume `0.5` — on the logo appearing
 
-DO NOT BE LAZY, actually read things and actually think and analyze them!
+**Less is more.** Most beats need zero SFX. One SFX per beat is typical; multiple only if the beat has genuinely distinct punctuation moments. Never use SFX on shader transitions (they are their own audio-visual event). Always check: does the SFX duration fit within the beat's remaining time after its trigger point?
 
 ### Architecture Constraint: Each Beat is an Independent Composition
 

@@ -86,7 +86,7 @@ Create `index.html` yourself. This is the orchestrator — it holds beat slots, 
 </div>
 ```
 
-Read `sfx/manifest.json` for SFX durations and descriptions. Match SFX to the right moments (text typing, logo appearing, stat revealing, clicking on something, rising tension or excitement). Shader transitions are their own audio-visual event and don't need SFX! For the SFX, try to not overuse them, their just decorations and polishing things, that adds a bit of a taste into the video.
+SFX were assigned in the storyboard (Step 3) — implement exactly what STORYBOARD.md specifies. Each SFX entry has a file, trigger time, and volume. Wire each one as an `<audio>` element with the exact `data-start`, `data-duration`, and `data-volume` from the storyboard. Do not add, remove, or substitute SFX beyond what the storyboard says.
 
 **Shader transitions**
 
