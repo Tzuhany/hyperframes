@@ -29,6 +29,8 @@ After lint and validate pass, capture snapshot frames to SEE your own output. **
 
 Scale snapshot count to the video — not a fixed number. Formula: `max(beats × 3, ceil(duration_seconds / 2))`. A 3-beat 10s video: max(9, 5) = 9 frames. An 8-beat 60s video: max(24, 30) = 30 frames. Aim for at least 3 frames per beat: entrance, hold, and near-exit.
 
+**⚠ NEVER use `npx hyperframes snapshot`.** The published CLI (0.6.6) is missing critical fixes: sub-comps load before capturing, local-time seek for last beats, Gemini vision descriptions. Always use the local CLI below or all beats after the first may appear black and descriptions.md won't be generated.
+
 ```bash
 # Standard snapshot — Gemini vision runs automatically if GEMINI_API_KEY is set:
 npx tsx packages/cli/src/cli.ts snapshot <project-dir> --frames <N>

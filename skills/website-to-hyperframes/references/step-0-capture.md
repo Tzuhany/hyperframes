@@ -11,7 +11,7 @@ If the user provides the key or already has one set, proceed. If they skip it, p
 Create a project directory for your video if it doesn't exist yet, then capture the website into a `capture/` subfolder within it:
 
 ```bash
-# Use the local CLI (includes paginated contact sheets and SVG root scan fixes):
+# ⚠ ALWAYS use the local CLI — never `npx hyperframes capture`:
 npx tsx packages/cli/src/cli.ts capture <URL> -o <project-dir>/capture
 ```
 
