@@ -85,6 +85,9 @@ def extract_preview(html_path, slug):
             lines.append(line)
     scoped_css = '\n'.join(lines)
 
+    # Strip any script tags from the slide HTML
+    slide_html = re.sub(r'<script[^>]*>.*?</script>', '', slide_html, flags=re.DOTALL)
+
     # Build inline preview: scoped style + slide content
     preview = (
         f'<div class="{scope_class}" style="width:1920px;height:1080px;position:relative;overflow:hidden;">'
@@ -92,9 +95,6 @@ def extract_preview(html_path, slug):
         f'{slide_html}'
         f'</div>'
     )
-
-    # Escape for JSON embedding (single quotes in style attrs)
-    preview = preview.replace('\\', '\\\\').replace('"', '\\"')
 
     return preview
 
