@@ -108,7 +108,17 @@ Per beat, specify SFX like:
 - `sfx/impact-bass-1.mp3` at `0.2s`, volume `0.35` — on the hero image snapping into frame
 - `sfx/chime.mp3` at `3.8s`, volume `0.5` — on the logo appearing
 
-**Less is more.** Most beats need zero SFX. One SFX per beat is typical; multiple only if the beat has genuinely distinct punctuation moments. Never use SFX on shader transitions (they are their own audio-visual event). Always check: does the SFX duration fit within the beat's remaining time after its trigger point?
+**Less is more.** Most beats need zero SFX. One SFX per beat is typical; multiple only if the beat has genuinely distinct punctuation moments. Never place SFX on shader transitions directly — shader transitions are already an audio-visual event.
+
+**How to place each sound type** (industry-standard rules):
+
+- **Impact/hit sounds** (`impact-bass-1`, `ping`, `pop`, `glitch-*`): peak is at the start of the clip. Trigger exactly at the visual moment. Let the decay tail bleed into the next scene — this is normal, called a J-Cut, and sounds professional. `data-duration` = full manifest duration, never trimmed.
+- **Riser/build-up sounds** (`riser`, `whoosh-cinematic`): peak is at the END of the clip. To make the peak land on a climax moment (a transition, a reveal), trigger at `climax_time - sfx_duration`. For `riser.mp3` (10.03s) peaking at a t=20s transition: trigger at t=9.97s.
+- **Short accent sounds** (`click`, `click-soft`, `chime`, `sparkle`, `ping`): trigger at the exact visual punctuation moment. Duration is short, no tail concern.
+
+**Volume when SFX overlaps narration:** HyperFrames has no automatic audio ducking. If an SFX plays under spoken narration, set its volume to 0.2–0.3 max, not 0.5+. Specify this in the storyboard entry so Step 5 wires it correctly.
+
+**data-duration rule** (for Step 5 to implement): always equals the manifest's duration field exactly. Never set it shorter to "fit" the remaining beat time — truncating an impact mid-decay is the exact problem causing the cut-off sounds in v2 videos.
 
 ### Architecture Constraint: Each Beat is an Independent Composition
 
@@ -163,6 +173,8 @@ Decide the number of beats and their durations based on the script and brand —
 **Use captured screenshots over CSS recreations.** The capture folder has real product UI — actual interfaces with real data, real colors, real chrome. You might or might not use them, but if you do, make it at full-bleed (100% frame width) with Ken Burns zoom or perspective tilt or 3D moving rotation or turn or whatever the best way you will find.
 
 **CTA / closing beats** are consistently the weakest. Agents treat them as "logo + tagline + done." A good CTA should: make the logo entrance an event (SVG path draw, scale with overshoot, or anything awesome really), have continuous background motion, and hold only 2-3 seconds after the last spoken word — NOT 8-10 seconds of silence.
+
+**VO start timing — decide here, not in Step 5.** When does the narration actually begin relative to the first visual? Options: (a) VO starts over the visual intro (heard before content settles — creates urgency), (b) VO starts after the visual intro settles (viewer sees the opening, then hears the voice — creates drama), (c) a few seconds of music-only visual before VO enters. None of these is a default — pick based on the brand and the opening beat's concept. State the intended narration start time explicitly in the storyboard's Global Direction, e.g. `**Narration start:** 0.8s (after hero intro settles)`. Step 5 wires this as the audio element's `data-start`.
 
 **Concept-first beats.** Every beat starts with its CONCEPT — not "what technique to use" but "what does this scene should show, what did the previous showed and what will the next show...?" What idea is being communicated? The crazy and interesting concept drives every technical decision.
 

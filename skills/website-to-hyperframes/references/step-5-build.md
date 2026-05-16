@@ -2,6 +2,8 @@
 
 **Captions rule — read before building anything:** Never create `compositions/captions.html` with an empty transcript (`const script = []`). If the VO/transcript step was skipped or failed, do not create a captions composition at all. An empty captions file silently does nothing and wastes a track slot. Only create it when `transcript.json` has real word timestamps.
 
+**Captions stacking bug:** Every caption word group must start with `opacity: 0` (or `visibility: hidden`) and be positioned `position: absolute`. Never show more than one group at a time — GSAP controls visibility sequentially. If multiple groups are visible simultaneously it means either (a) the initial CSS state isn't hidden, or (b) a group's exit tween is missing before the next group's entrance fires. After building captions.html, take a snapshot at 3–4 timestamps mid-narration and verify only one word group is visible per frame.
+
 **Before building, verify you have:**
 
 - **STORYBOARD.md** — the beat-by-beat plan. Re-read it now if you don't remember every beat's concept, assets, and techniques.
@@ -105,9 +107,16 @@ Then in `index.html` use the local file:
 
 Call `HyperShader.init()` as documented. Read [the shader transitions section in the main hyperframes skill](../../hyperframes/references/transitions.md) for the full API. Key rule: `scenes.length === transitions.length + 1`.
 
-**Font handling:** Common fonts (Inter, Roboto, JetBrains Mono, Poppins) are auto-resolved by the renderer. Only brand-specific fonts (GT Walsheim, Aeonik, etc.) need `@font-face`. Check `capture/assets/fonts/` — hashed filenames are Google Fonts subsets that auto-resolve; recognizable filenames are brand fonts that need `@font-face`.
+**Font handling:** Common fonts are auto-resolved by the renderer: use `"Inter"` (not `"Inter Variable"` — the compiler only maps the base name), `"Roboto"`, `"JetBrains Mono"`, `"Poppins"`. If a composition uses `"Inter Variable"` it will log compiler warnings and may fall back incorrectly — always use `"Inter"`. Only brand-specific fonts (GT Walsheim, Aeonik, etc.) need `@font-face`. Check `capture/assets/fonts/` — hashed filenames are Google Fonts subsets that auto-resolve; recognizable filenames (e.g. `BrandSans-Bold.woff2`) are brand fonts that need `@font-face` declarations.
 
-**Asset paths — this is a common source of bugs.** Compositions live in `compositions/beat-N.html` but are loaded by `index.html` at the project root. All asset paths in compositions must be relative to the PROJECT ROOT, not to the composition file. Use `capture/screenshots/scroll-000.png`, NOT `../capture/screenshots/scroll-000.png`. The Studio preview rewrites base URLs — paths that work in snapshots can 404 in preview if they use `../` navigation. Always use paths relative to the project root.
+**Brand font @font-face:** If the storyboard's BRAND VALUES lists a brand-specific font with a path in `capture/assets/fonts/`, add the `@font-face` block at the top of each composition that uses it — sub-agents won't do this unless you tell them explicitly. Paste the exact `@font-face` declaration in the sub-agent prompt's BRAND VALUES section. Without this, every composition falls back to `system-ui` and the brand typeface never loads.
+
+**⚠ ASSET PATHS — most common sub-agent mistake (5+ agents per run):** All asset paths in compositions must be relative to the **PROJECT ROOT**, not to the composition file. `compositions/beat-N.html` lives one directory deep, but paths must be written as if from the root.
+
+- ✅ `capture/assets/hero.png`
+- ❌ `../capture/assets/hero.png`
+
+The Studio preview server rewrites base URLs to the project root — `../` paths that seem to work locally will 404 in preview and in renders. Add this verbatim to every sub-agent prompt's RULES section.
 
 ## 3. Build each composition — USE SUB-AGENTS
 
@@ -192,6 +201,9 @@ ANY code, read these — targeted reads only, not full files:
 Brand values are in the BRAND VALUES section above — no need to read DESIGN.md.
 
 ═══ RULES ═══
+- ASSET PATHS: always project-root-relative. capture/assets/file.png ✅  ../capture/assets/file.png ❌
+- FONTS: if brand fonts are listed above with a capture/assets/fonts/ path, add @font-face at the top of your CSS. Without it everything falls back to system-ui.
+- QUERYSELECTOR: never use document.querySelector("#host #child") to reach elements inside a beat host div — the host isn't in the main DOM at script time. Use document.getElementById("child") with null guards.
 - If you want to place text over a screenshot: VIEW it first
 - Use captured screenshots at full size, NOT CSS recreations unless you
   can recreate something almost pixel perfect
@@ -225,6 +237,7 @@ For each beat:
 - **No bare `gsap.to()`** — all tweens on `tl`, never standalone
 - **No full-screen dark linear gradients** — H.264 banding
 - **Minimum fonts**: 80px+ headlines, 20px+ body
+- **WCAG contrast on gradient backgrounds:** The contrast validator samples actual background pixels under the text element — if the background is a gradient image, darker parts of the image make the measured ratio _worse_ when you darken the text color, not better. Fix: either place text over a solid-color zone, or add `data-layout-ignore` attribute to decorative labels that don't need WCAG compliance. Don't blindly darken text color when the background isn't solid.
 
 ## 4. After all compositions are built — reconciliation check
 

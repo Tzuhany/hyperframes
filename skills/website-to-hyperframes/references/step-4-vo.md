@@ -103,6 +103,16 @@ Generate the full script as `narration.wav` (or `.mp3`) in the project directory
 
 Never sit idle for 10 minutes hoping a stuck process will finish.
 
+**Kokoro pronunciation issues:** Kokoro mispronounces product names and tech terms. Always apply substitutions before generating. Known problems and fixes:
+
+- `API` → `A P I` (spell it out)
+- `UI` → `U I`, `SaaS` → `sass`, `DevOps` → `dev ops`
+- Product names with unusual spelling: test the first sentence first and listen. Common failure: "Vercel" → "versatile", "WorkOS" → "work O S", "One API" → "Wanna PI"
+- If a name sounds wrong: write it phonetically in `narration.txt` (e.g., `Vercel` → `Ver-sell`, `Supabase` → `Soopa-base`)
+- Always generate a short test clip with the first 2 sentences before generating the full audio
+
+For ElevenLabs and HeyGen TTS, substitutions are usually unnecessary — they handle product names correctly.
+
 **Also save the exact spoken text** — with pronunciation substitutions applied (e.g., `API` → `A P I`, `$2T` → `two trillion` and etc.) — as `narration.txt` in the same directory. This is the string passed to TTS, distinct from `SCRIPT.md` which is the human-readable creative doc. Having `narration.txt` makes it trivial to regenerate the audio later with a different voice without re-deriving the substitutions. Name it exactly `narration.txt`.
 
 ## Transcribe for word-level timestamps
