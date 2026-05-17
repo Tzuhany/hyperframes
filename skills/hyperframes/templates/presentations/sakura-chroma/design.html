@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>__NAME__ — Design System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600__FONT_LINK_EXTRA__&display=swap" rel="stylesheet" />
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.167.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.167.0/examples/jsm/"}}
+</script>
 
 <style id="ds-tokens">
 :root{
@@ -28,8 +32,11 @@ html,body{margin:0;padding:0;background:var(--cream)}
 body{color:var(--ink);font:400 14px/1.6 var(--f-body);overflow-x:hidden}
 ::selection{background:var(--red);color:var(--cream)}
 
+#design-bg{position:fixed;inset:0;width:100%;height:100%;z-index:-2;opacity:.45;pointer-events:none}
+#bg-veil{position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 40% 30%,transparent 0%,var(--cream) 75%)}
+
 /* Halftone overlay */
-body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:radial-gradient(circle,rgba(28,22,18,0.05) 1px,transparent 1px);background-size:4px 4px}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(circle,rgba(28,22,18,0.05) 1px,transparent 1px);background-size:4px 4px}
 
 /* Diagonal rainbow ribbons across cover/manifesto */
 .ribbons{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
@@ -151,6 +158,18 @@ section{position:relative;padding:var(--pad-y) var(--pad-x)}
 .panel p{margin:0;font:500 14px/1.65 var(--f-body);color:var(--ink);max-width:38ch}
 .panel pre{margin:0;padding:14px;border:2px solid var(--ink);background:var(--cream);font:500 12px/1.6 var(--f-mono);color:var(--ink);overflow-x:auto}
 
+/* Background preview */
+.bg-preview{border:3px solid var(--ink);aspect-ratio:4/3;position:relative;overflow:hidden;background:var(--cream)}
+.bg-preview canvas{width:100%;height:100%;display:block}
+.bg-preview .badge{position:absolute;bottom:0;left:0;right:0;font:600 10px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;background:var(--ink);padding:8px 14px;color:var(--yellow)}
+
+details.code-block{border:3px solid var(--ink);background:var(--cream);margin-top:12px;overflow:hidden}
+details.code-block summary{cursor:pointer;padding:10px 16px;list-style:none;font:600 11px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--cream);background:var(--ink);display:flex;justify-content:space-between;align-items:center}
+details.code-block summary::-webkit-details-marker{display:none}
+details.code-block summary::after{content:"+";font:700 18px/1 var(--f-disp);color:var(--red)}
+details.code-block[open] summary::after{content:"\2212"}
+details.code-block pre{margin:0;padding:14px;border-top:2px solid var(--ink);font:500 12px/1.6 var(--f-mono);color:var(--ink);background:var(--cream);overflow-x:auto;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow-y:auto}
+
 /* Guidelines */
 .rules-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px}
 @media(max-width:880px){.rules-grid{grid-template-columns:1fr}}
@@ -197,101 +216,17 @@ footer.endcap .meta b{color:var(--red)}
 </style>
 
 <style id="template-css">
-.ds-slide-frame{
-  --s-cream:#EFE6D3; --s-ink:#1C1612; --s-red:#E25C58; --s-blue:#2880A3;
-  --s-yellow:#E8B842; --s-pink:#E89BC3;
-  --s-line:color-mix(in srgb,#1C1612 20%,transparent);
-  --s-f-disp:"Oswald",sans-serif;
-  --s-f-body:"Noto Sans",sans-serif;
-  --s-f-jp:"Noto Sans JP",sans-serif;
-  --s-f-mono:"JetBrains Mono",monospace;
-  width:1920px;height:1080px;position:relative;overflow:hidden
-}
-.ds-slide-frame *{box-sizing:border-box}
-.ds-slide-frame .slide{width:1920px;height:1080px;position:relative;padding:80px 96px;display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;background:var(--s-cream);color:var(--s-ink);font-family:var(--s-f-body)}
-.ds-slide-frame .ribbons{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
-.ds-slide-frame .ribbons .ribbon{position:absolute;left:-20%;width:140%;height:64px;transform:rotate(-12deg)}
-.ds-slide-frame .ribbons .ribbon.r1{top:18%;background:var(--s-red)}
-.ds-slide-frame .ribbons .ribbon.r2{top:calc(18% + 64px);background:var(--s-yellow)}
-.ds-slide-frame .ribbons .ribbon.r3{top:calc(18% + 128px);background:var(--s-blue)}
-.ds-slide-frame .ribbons .ribbon.r4{top:calc(18% + 192px);background:var(--s-pink)}
-.ds-slide-frame .slide>*{position:relative;z-index:1}
-.ds-slide-frame .slide-chrome,.ds-slide-frame .slide-foot{display:flex;justify-content:space-between;align-items:center;font:600 18px/1 var(--s-f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--s-cream);background:var(--s-ink);padding:10px 16px;margin-bottom:36px}
-.ds-slide-frame .slide-foot{margin-top:36px;margin-bottom:0;background:var(--s-red)}
-.ds-slide-frame .slide-chrome .accent{color:var(--s-yellow)}
-.ds-slide-frame .display{font:700 240px/.9 var(--s-f-disp);letter-spacing:.005em;text-transform:uppercase;color:var(--s-ink)}
-.ds-slide-frame .display em{font-style:normal;background:var(--s-red);color:var(--s-cream);padding:0 .04em;display:inline-block;line-height:.9}
-.ds-slide-frame .h1{font:700 144px/.92 var(--s-f-disp);letter-spacing:.005em;text-transform:uppercase;color:var(--s-blue)}
-.ds-slide-frame .h2{font:700 88px/1 var(--s-f-disp);letter-spacing:.005em;text-transform:uppercase;color:var(--s-ink)}
-.ds-slide-frame .h2 em{font-style:normal;background:var(--s-red);color:var(--s-cream);padding:0 .04em;display:inline-block;line-height:1}
-.ds-slide-frame .h3{font:700 52px/1.05 var(--s-f-disp);letter-spacing:.005em;text-transform:uppercase;color:var(--s-blue)}
-.ds-slide-frame .jp{font:700 60px/1.1 var(--s-f-jp);letter-spacing:.04em;color:var(--s-ink)}
-.ds-slide-frame .lead{font:600 30px/1.45 var(--s-f-body);color:var(--s-ink)}
-.ds-slide-frame .body{font:500 24px/1.6 var(--s-f-body);color:var(--s-ink)}
-.ds-slide-frame .label{font:600 16px/1 var(--s-f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--s-cream);background:var(--s-ink);padding:6px 14px;display:inline-block}
-
-.ds-slide-frame .slide--cover .slide-chrome,.ds-slide-frame .slide--cover .slide-foot{display:none}
-.ds-slide-frame .slide--cover{display:flex;flex-direction:column;justify-content:space-between;padding:48px}
-.ds-slide-frame .slide--cover .cover-top{display:flex;justify-content:space-between;align-items:flex-start;font:600 16px/1 var(--s-f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--s-ink);background:var(--s-cream);padding:10px 16px;border:2px solid var(--s-ink);align-self:flex-start;width:fit-content;z-index:2}
-.ds-slide-frame .slide--cover .cover-headline{font:700 220px/.88 var(--s-f-disp);letter-spacing:.005em;text-transform:uppercase;color:var(--s-ink);background:var(--s-cream);padding:32px 48px;border:3px solid var(--s-ink);align-self:flex-start;margin:0;z-index:2;max-width:90%}
-.ds-slide-frame .slide--cover .cover-headline em{font-style:normal;color:var(--s-red)}
-.ds-slide-frame .slide--cover .cover-foot{display:flex;justify-content:space-between;align-items:flex-end;background:var(--s-ink);color:var(--s-cream);padding:14px 20px;font:600 16px/1 var(--s-f-mono);letter-spacing:.14em;text-transform:uppercase;z-index:2}
-.ds-slide-frame .slide--cover .cover-foot .accent{color:var(--s-yellow)}
-
-.ds-slide-frame .slide--spec .slide-body{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;padding-top:24px}
-.ds-slide-frame .spec-card{background:var(--s-cream);border:3px solid var(--s-ink);padding:0;overflow:hidden}
-.ds-slide-frame .spec-card .strip{height:24px;background:repeating-linear-gradient(-12deg,var(--s-red) 0 16px,var(--s-yellow) 16px 32px,var(--s-blue) 32px 48px,var(--s-pink) 48px 64px)}
-.ds-slide-frame .spec-card .body{padding:32px 36px;display:flex;flex-direction:column;gap:18px}
-.ds-slide-frame .spec-card h3{margin:0;font:700 56px/.95 var(--s-f-disp);letter-spacing:.005em;text-transform:uppercase;color:var(--s-ink)}
-.ds-slide-frame .spec-card .specs{display:flex;flex-direction:column;gap:10px;padding-top:18px;border-top:2px solid var(--s-ink);font:500 22px/1.4 var(--s-f-body)}
-.ds-slide-frame .spec-card .specs li{list-style:none;display:flex;gap:10px;align-items:baseline}
-.ds-slide-frame .spec-card .specs li::before{content:"☑";color:var(--s-red);font-size:24px;line-height:1}
-.ds-slide-frame .spec-card .specs li b{font-family:var(--s-f-mono);font-weight:600;letter-spacing:.04em;color:var(--s-blue);text-transform:uppercase;font-size:14px;margin-right:8px}
-
-.ds-slide-frame .slide--statement .slide-body{display:flex;flex-direction:column;justify-content:center;gap:32px}
-.ds-slide-frame .slide--statement .h1{max-width:24ch}
-
-.ds-slide-frame .slide--quote .slide-chrome,.ds-slide-frame .slide--quote .slide-foot{display:none}
-.ds-slide-frame .slide--quote{display:flex;flex-direction:column;justify-content:center;padding:80px 160px;gap:48px;background:var(--s-ink);color:var(--s-cream)}
-.ds-slide-frame .quote-mark{font:700 240px/.5 var(--s-f-disp);color:var(--s-red);height:120px}
-.ds-slide-frame .quote-text{font:700 88px/1.1 var(--s-f-disp);letter-spacing:.005em;text-transform:uppercase;color:var(--s-cream);max-width:88%}
-.ds-slide-frame .quote-text em{font-style:normal;background:var(--s-yellow);color:var(--s-ink);padding:0 .04em;display:inline-block;line-height:1.1}
-.ds-slide-frame .quote-attr{display:flex;flex-direction:column;gap:8px;padding-top:24px;border-top:2px solid var(--s-cream);max-width:600px}
-.ds-slide-frame .quote-attr .nm{font:700 32px/1 var(--s-f-disp);color:var(--s-yellow);text-transform:uppercase;letter-spacing:.005em}
-.ds-slide-frame .quote-attr .src{font:600 16px/1 var(--s-f-mono);letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--s-cream) 70%,transparent)}
-
-.ds-slide-frame .slide--stats .slide-body{display:flex;flex-direction:column;justify-content:center;gap:32px}
-.ds-slide-frame .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.ds-slide-frame .stat-card{background:var(--s-cream);border:3px solid var(--s-ink);padding:0;display:flex;flex-direction:column;overflow:hidden}
-.ds-slide-frame .stat-card .strip{height:16px}
-.ds-slide-frame .stat-card:nth-child(1) .strip{background:var(--s-red)}
-.ds-slide-frame .stat-card:nth-child(2) .strip{background:var(--s-blue)}
-.ds-slide-frame .stat-card:nth-child(3) .strip{background:var(--s-yellow)}
-.ds-slide-frame .stat-card .body{padding:28px 32px;display:flex;flex-direction:column;gap:8px}
-.ds-slide-frame .stat-card .v{font:700 108px/.95 var(--s-f-disp);letter-spacing:.005em;color:var(--s-ink)}
-.ds-slide-frame .stat-card .l{font:500 22px/1.4 var(--s-f-body);color:var(--s-ink)}
-.ds-slide-frame .stat-card .n{font:600 14px/1 var(--s-f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--s-blue)}
-
-.ds-slide-frame .slide--list .slide-body{display:grid;grid-template-columns:1fr 1.6fr;gap:64px;align-items:start;padding-top:24px}
-.ds-slide-frame .list-head{display:flex;flex-direction:column;gap:18px}
-.ds-slide-frame .list-items{list-style:none;padding:0;margin:0;display:flex;flex-direction:column}
-.ds-slide-frame .list-items li{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start;padding:22px 0;border-bottom:2px solid var(--s-ink)}
-.ds-slide-frame .list-items li::before{content:"☑";font-size:42px;line-height:1;color:var(--s-red)}
-.ds-slide-frame .list-items .h{font:700 32px/1.15 var(--s-f-disp);color:var(--s-ink);letter-spacing:.005em;text-transform:uppercase;display:block;margin-bottom:6px}
-.ds-slide-frame .list-items .d{font:500 22px/1.5 var(--s-f-body);color:var(--s-ink);display:block}
-
-.ds-slide-frame .slide--end .slide-chrome,.ds-slide-frame .slide--end .slide-foot{display:none}
-.ds-slide-frame .slide--end{display:flex;flex-direction:column;justify-content:center;padding:96px 144px;gap:48px}
-.ds-slide-frame .end-mark{font:700 240px/.9 var(--s-f-disp);letter-spacing:.005em;text-transform:uppercase;color:var(--s-ink);background:var(--s-cream);padding:24px 36px;border:3px solid var(--s-ink);align-self:flex-start;z-index:1}
-.ds-slide-frame .end-mark em{font-style:normal;color:var(--s-red)}
-.ds-slide-frame .end-jp{font:700 48px/1.1 var(--s-f-jp);letter-spacing:.04em;color:var(--s-ink);background:var(--s-yellow);padding:10px 20px;border:2px solid var(--s-ink);align-self:flex-start;z-index:1}
+__TEMPLATE_CSS__
 </style>
 </head>
 <body>
 
+<canvas id="design-bg"></canvas>
+<div id="bg-veil"></div>
+
 <div class="rail">
-  <div class="brand"><span class="ribbon-mark"><span></span><span></span><span></span><span></span></span><b>Sakura Chroma</b></div>
-  <nav><a href="#palette">01</a><a href="#type">02</a><a href="#surface">03</a><a href="#motion">04</a><a href="#guidelines">05</a><a href="#templates">06</a></nav>
+  <div class="brand"><span class="ribbon-mark"><span></span><span></span><span></span><span></span></span><b>__NAME__</b></div>
+  <nav><a href="#palette">01</a><a href="#type">02</a><a href="#surface">03</a><a href="#motion">04</a><a href="#background">05</a><a href="#guidelines">06</a><a href="#templates">07</a></nav>
   <div class="meta">サクラ・クロマ</div>
 </div>
 
@@ -301,13 +236,13 @@ footer.endcap .meta b{color:var(--red)}
     <div class="cover-chrome">☑ Design System / № 013</div>
     <div class="cover-chrome"><span class="right">★ MMXXVI</span></div>
   </div>
-  <h1 class="cover-headline">SAKURA<br/><em>CHROMA</em>.</h1>
+  <h1 class="cover-headline">__NAME__<em>.</em></h1>
   <div class="cover-jp">桜・色彩 — a system in four ribbons</div>
   <div class="cover-foot">
     <div class="cell"><span class="k">CATEGORY</span><span class="v">Catalogue · Hardware · Music</span></div>
     <div class="cell"><span class="k">DISPLAY</span><span class="v">Oswald 700</span></div>
-    <div class="cell"><span class="k">PALETTE</span><span class="v">4 ribbons + cream + ink</span></div>
-    <div class="cell"><span class="k">VOLUME</span><span class="v jp">06 sections · 07 frames</span></div>
+    <div class="cell"><span class="k">SIGNAL</span><span class="v">__ACCENT_LABEL__</span></div>
+    <div class="cell"><span class="k">VOLUME</span><span class="v jp">07 sections · __SLIDE_COUNT__ frames</span></div>
   </div>
 </header>
 
@@ -322,13 +257,13 @@ footer.endcap .meta b{color:var(--red)}
   <div class="section-head">
     <span class="num">01 — Palette</span>
     <h2>Cream, ink,<br/>and <em>four ribbons.</em></h2>
-    <p class="lede">Warm cream as the catalogue paper. Black ink as the line. Red, blue, yellow, and pink as the ribbons — each a category, used as background stripes or accent fills.</p>
+    <p class="lede">__PALETTE_LEDE__</p>
   </div>
   <div class="palette">
-    <div class="swatch swatch--cream"><div class="role"><span>01 // PAPER</span></div><div class="fill"><div class="name">cream.</div><div class="hex">__PRIMARY__</div><div class="usage">Catalogue paper.</div></div></div>
-    <div class="swatch swatch--ink"><div class="role"><span>02 // INK</span></div><div class="fill"><div class="name">ink.</div><div class="hex">__SECONDARY__</div><div class="usage">Headlines, borders, lines.</div></div></div>
-    <div class="swatch swatch--red"><div class="role"><span>03 // RED</span></div><div class="fill"><div class="name">red.</div><div class="hex">__ACCENT__</div><div class="usage">Primary ribbon. Headlines, alerts.</div></div></div>
-    <div class="swatch swatch--blue"><div class="role"><span>04 // BLUE</span></div><div class="fill"><div class="name">blue.</div><div class="hex">__TERTIARY__</div><div class="usage">Secondary ribbon. Subheads.</div></div></div>
+    <div class="swatch swatch--cream"><div class="role"><span>01 // PAPER</span></div><div class="fill"><div class="name">__PRIMARY_NAME__</div><div class="hex">__PRIMARY__</div><div class="usage">Catalogue paper.</div></div></div>
+    <div class="swatch swatch--ink"><div class="role"><span>02 // INK</span></div><div class="fill"><div class="name">__SECONDARY_NAME__</div><div class="hex">__SECONDARY__</div><div class="usage">Headlines, borders, lines.</div></div></div>
+    <div class="swatch swatch--red"><div class="role"><span>03 // RED</span></div><div class="fill"><div class="name">__ACCENT_NAME__</div><div class="hex">__ACCENT__</div><div class="usage">Primary ribbon. Headlines, alerts.</div></div></div>
+    <div class="swatch swatch--blue"><div class="role"><span>04 // BLUE</span></div><div class="fill"><div class="name">__TERTIARY_NAME__</div><div class="hex">__TERTIARY__</div><div class="usage">Secondary ribbon. Subheads.</div></div></div>
   </div>
 </section>
 
@@ -371,12 +306,11 @@ footer.endcap .meta b{color:var(--red)}
       </div>
     </div>
     <ul class="tokens">
-      <li><span class="name">BORDER</span><span class="val">3 PX</span><span class="bar" style="width:36px"></span></li>
-      <li><span class="name">RADIUS</span><span class="val">0 PX</span><span class="bar" style="width:6px"></span></li>
-      <li><span class="name">RIBBON</span><span class="val">−12°</span><span class="bar" style="width:30px"></span></li>
-      <li><span class="name">SHADOW</span><span class="val">NONE</span><span class="bar" style="width:0;opacity:.2"></span></li>
-      <li><span class="name">PADDING</span><span class="val">28 PX</span><span class="bar" style="width:36px"></span></li>
-      <li><span class="name">DENSITY</span><span class="val">CATALOGUE</span><span class="bar" style="width:48px"></span></li>
+      <li><span class="name">Corners</span><span class="val">__CORNER_RADIUS__</span><span class="bar" style="width:6px"></span></li>
+      <li><span class="name">Padding</span><span class="val">__PADDING__</span><span class="bar" style="width:36px"></span></li>
+      <li><span class="name">Gap</span><span class="val">__GAP__</span><span class="bar" style="width:30px"></span></li>
+      <li><span class="name">Elevation</span><span class="val">__ELEVATION__</span><span class="bar" style="width:0;opacity:.2"></span></li>
+      <li><span class="name">Density</span><span class="val">__DENSITY__</span><span class="bar" style="width:48px"></span></li>
     </ul>
   </div>
 </section>
@@ -384,34 +318,62 @@ footer.endcap .meta b{color:var(--red)}
 <section id="motion" data-screen-label="04 Motion">
   <div class="section-head">
     <span class="num">04 — Motion</span>
-    <h2>Slide and<br/><em>click.</em></h2>
-    <p class="lede">Ribbons slide in from off-page on a hard ease. Cards click into position; no overshoot. Motion is mechanical, like a cassette door closing.</p>
+    <h2>__EASING_HEADLINE__</h2>
+    <p class="lede">__EASING_LEDE__</p>
   </div>
   <div class="two-col">
     <div class="panel">
       <div class="header">EASING.dll</div>
       <div class="panel-body">
-        <h4>SLIDE <em>IN.</em></h4>
-        <p>Aggressive head, hard stop. Use for ribbon entrances, card placements, and any element you want to feel mechanical.</p>
-        <pre>cubic-bezier(0.4, 0, 0.2, 1)</pre>
+        <h4>__EASING_NAME__</h4>
+        <p>__EASING_DESC__</p>
+        <pre>__EASING_VALUE__</pre>
       </div>
     </div>
     <div class="panel">
       <div class="header">DURATION.dll</div>
       <div class="panel-body">
-        <h4>0.6 <em>SEC.</em></h4>
-        <p>Ribbons enter in 0.6s, staggered 80ms apart. Cards click in 0.3s. Hovers in 0.1s.</p>
-        <pre>--dur-ribbon: 0.6s
---dur-click:  0.3s
---dur-hover:  0.1s</pre>
+        <h4>__DURATION_DEFAULT__</h4>
+        <p>__DURATION_DESC__</p>
+        <pre>__DURATION_VALUES__</pre>
       </div>
     </div>
   </div>
 </section>
 
-<section id="guidelines" data-screen-label="05 Guidelines">
+<!-- V. BACKGROUND -->
+<section id="background" data-screen-label="05 Background">
   <div class="section-head">
-    <span class="num">05 — Rules</span>
+    <span class="num">05 — Background</span>
+    <h2>__BG_HEADLINE__</h2>
+    <p class="lede">__BG_LEDE__</p>
+  </div>
+  <div class="two-col">
+    <div class="bg-preview"><canvas id="bg-preview-canvas"></canvas><span class="badge">☑ __BG_BADGE__</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <ul class="tokens" style="border-top:none">
+        <li><span class="name">Geometry</span><span class="val">__BG_TYPE__</span><span class="bar" style="width:36px"></span></li>
+        <li><span class="name">Density</span><span class="val">__BG_DENSITY__</span><span class="bar" style="width:42px"></span></li>
+        <li><span class="name">Speed</span><span class="val">__BG_SPEED__</span><span class="bar" style="width:18px;opacity:.7"></span></li>
+        <li><span class="name">Strength</span><span class="val">__BG_STRENGTH__</span><span class="bar" style="width:52px"></span></li>
+        <li><span class="name">Grain</span><span class="val">__BG_GRAIN__</span><span class="bar" style="width:24px"></span></li>
+      </ul>
+      <details class="code-block"><summary>☑ SHADER CONFIG (JSON)</summary>
+<pre>__SHADER_CONFIG__</pre>
+      </details>
+      <details class="code-block"><summary>☑ VERTEX SHADER (GLSL)</summary>
+<pre id="vtx-src">__SHADER_VERTEX__</pre>
+      </details>
+      <details class="code-block"><summary>☑ FRAGMENT SHADER (GLSL)</summary>
+<pre id="frg-src">__SHADER_FRAGMENT__</pre>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section id="guidelines" data-screen-label="06 Guidelines">
+  <div class="section-head">
+    <span class="num">06 — Rules</span>
     <h2>Allowed.<br/><em>Forbidden.</em></h2>
     <p class="lede">The catalogue stays in print the moment any of these slip.</p>
   </div>
@@ -420,80 +382,40 @@ footer.endcap .meta b{color:var(--red)}
       <div class="header">☑ ALLOWED</div>
       <div class="rules-col-body">
         <h3>YES.</h3>
-        <ul>
-          <li>Start cover, manifesto, and end with diagonal ribbon stripes.</li>
-          <li>Use Oswald 700 uppercase for every headline.</li>
-          <li>Place JIS-spec checkboxes under headlines for any factual list.</li>
-          <li>Reserve red for primary moments; blue for secondary.</li>
-          <li>Use Noto Sans JP for bilingual EN/JP pairs.</li>
-        </ul>
+        <ul>__DOS__</ul>
       </div>
     </div>
     <div class="rules-col dont">
       <div class="header">☒ FORBIDDEN</div>
       <div class="rules-col-body">
         <h3>NO.</h3>
-        <ul>
-          <li>Tilt ribbons less than −12° or more than −16°.</li>
-          <li>Use rounded corners on any chrome.</li>
-          <li>Apply shadows or gradients. Print only.</li>
-          <li>Use sentence case in headlines.</li>
-          <li>Mix more than two ribbon colours per slide.</li>
-        </ul>
+        <ul>__DONTS__</ul>
       </div>
     </div>
   </div>
 </section>
 
-<section id="templates" class="templates-wrap" data-screen-label="06 Templates">
+<section id="templates" class="templates-wrap" data-screen-label="07 Templates">
   <div class="section-head">
-    <span class="num">06 — Templates</span>
-    <h2>Seven<br/><em>cassette frames.</em></h2>
+    <span class="num">07 — Templates</span>
+    <h2>__SLIDE_COUNT_WORD__<br/><em>cassette frames.</em></h2>
     <p class="lede">The full library at 1920×1080. Each thumbnail is the live slide, scaled.</p>
   </div>
   <div class="templates-grid" id="templates-grid"></div>
 </section>
 
 <template id="tmpl-source">
-
-<div class="tmpl" data-idx="01"><div class="tmpl-thumb"><div class="scale-wrap"><div class="ds-slide-frame">
-<section class="slide slide--cover"><div class="ribbons"><div class="ribbon r1"></div><div class="ribbon r2"></div><div class="ribbon r3"></div><div class="ribbon r4"></div></div><div class="cover-top">☑ {{label}}</div><h1 class="cover-headline">{{headline}}</h1><div class="cover-foot"><span>{{label}}</span><span class="accent">★ {{label}}</span></div></section>
-</div></div></div><div class="tmpl-foot"><span class="name">cover</span><span class="idx">01/07</span></div></div>
-
-<div class="tmpl" data-idx="02"><div class="tmpl-thumb"><div class="scale-wrap"><div class="ds-slide-frame">
-<section class="slide slide--spec"><header class="slide-chrome"><span>{{label}}</span><span class="accent">{{label}}</span></header><div class="slide-body"><div class="spec-card"><div class="strip"></div><div class="body"><h3>{{headline}}</h3><ul class="specs"><li><b>TYPE</b>{{text}}</li><li><b>FORM</b>{{text}}</li><li><b>USE</b>{{text}}</li></ul></div></div><div class="spec-card"><div class="strip"></div><div class="body"><h3>{{headline}}</h3><ul class="specs"><li><b>TYPE</b>{{text}}</li><li><b>FORM</b>{{text}}</li><li><b>USE</b>{{text}}</li></ul></div></div></div><footer class="slide-foot"><span>{{label}}</span><span>{{number}}</span></footer></section>
-</div></div></div><div class="tmpl-foot"><span class="name">spec</span><span class="idx">02/07</span></div></div>
-
-<div class="tmpl" data-idx="03"><div class="tmpl-thumb"><div class="scale-wrap"><div class="ds-slide-frame">
-<section class="slide slide--statement"><header class="slide-chrome"><span>{{label}}</span><span class="accent">{{label}}</span></header><div class="slide-body"><span class="label">{{label}}</span><h2 class="h1">{{headline}}</h2><p class="lead">{{body}}</p></div><footer class="slide-foot"><span>{{label}}</span><span>{{number}}</span></footer></section>
-</div></div></div><div class="tmpl-foot"><span class="name">statement</span><span class="idx">03/07</span></div></div>
-
-<div class="tmpl" data-idx="04"><div class="tmpl-thumb"><div class="scale-wrap"><div class="ds-slide-frame">
-<section class="slide slide--quote"><div class="quote-mark">"</div><div class="quote-text">{{body}}</div><div class="quote-attr"><span class="nm">— {{text}}</span><span class="src">{{label}}</span></div></section>
-</div></div></div><div class="tmpl-foot"><span class="name">quote</span><span class="idx">04/07</span></div></div>
-
-<div class="tmpl" data-idx="05"><div class="tmpl-thumb"><div class="scale-wrap"><div class="ds-slide-frame">
-<section class="slide slide--stats"><header class="slide-chrome"><span>{{label}}</span><span class="accent">{{label}}</span></header><div class="slide-body"><h2 class="h2">{{headline}}</h2><div class="stats-grid"><div class="stat-card"><div class="strip"></div><div class="body"><span class="v">{{number}}</span><span class="l">{{body}}</span><span class="n">{{label}}</span></div></div><div class="stat-card"><div class="strip"></div><div class="body"><span class="v">{{number}}</span><span class="l">{{body}}</span><span class="n">{{label}}</span></div></div><div class="stat-card"><div class="strip"></div><div class="body"><span class="v">{{number}}</span><span class="l">{{body}}</span><span class="n">{{label}}</span></div></div></div></div><footer class="slide-foot"><span>{{label}}</span><span>{{number}}</span></footer></section>
-</div></div></div><div class="tmpl-foot"><span class="name">stats</span><span class="idx">05/07</span></div></div>
-
-<div class="tmpl" data-idx="06"><div class="tmpl-thumb"><div class="scale-wrap"><div class="ds-slide-frame">
-<section class="slide slide--list"><header class="slide-chrome"><span>{{label}}</span><span class="accent">{{label}}</span></header><div class="slide-body"><div class="list-head"><span class="label">{{label}}</span><h3 class="h3">{{headline}}</h3><p class="body">{{body}}</p></div><ul class="list-items"><li><div><span class="h">{{headline}}</span><span class="d">{{body}}</span></div></li><li><div><span class="h">{{headline}}</span><span class="d">{{body}}</span></div></li><li><div><span class="h">{{headline}}</span><span class="d">{{body}}</span></div></li><li><div><span class="h">{{headline}}</span><span class="d">{{body}}</span></div></li></ul></div><footer class="slide-foot"><span>{{label}}</span><span>{{number}}</span></footer></section>
-</div></div></div><div class="tmpl-foot"><span class="name">list</span><span class="idx">06/07</span></div></div>
-
-<div class="tmpl" data-idx="07"><div class="tmpl-thumb"><div class="scale-wrap"><div class="ds-slide-frame">
-<section class="slide slide--end"><div class="ribbons"><div class="ribbon r1"></div><div class="ribbon r2"></div><div class="ribbon r3"></div><div class="ribbon r4"></div></div><h2 class="end-mark">{{headline}} <em>{{text}}</em></h2><span class="end-jp">{{text}}</span></section>
-</div></div></div><div class="tmpl-foot"><span class="name">end</span><span class="idx">07/07</span></div></div>
-
+__SLIDE_CARDS__
 </template>
 
-<footer class="endcap" data-screen-label="07 End">
+<footer class="endcap" data-screen-label="08 End">
   <div class="ribbons"><div class="ribbon r1"></div><div class="ribbon r2"></div><div class="ribbon r3"></div><div class="ribbon r4"></div></div>
   <div class="grid">
     <h2 class="endmark">END <em>SIDE B.</em></h2>
     <div class="meta">
-      <div><b>Sakura Chroma</b> · 桜・色彩 v 1.0</div>
+      <div><b>__NAME__</b> · 桜・色彩 v 1.0</div>
       <div>Oswald / Noto Sans / Noto Sans JP</div>
-      <div>Pressed May 2026</div>
+      <div>Pressed __DATE__</div>
     </div>
   </div>
 </footer>
@@ -506,6 +428,8 @@ footer.endcap .meta b{color:var(--red)}
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(rescale);
 })();
 </script>
+
+__SHADER_SCRIPT__
 
 </body>
 </html>
