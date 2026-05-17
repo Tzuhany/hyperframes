@@ -2535,7 +2535,56 @@
           h = h.replace(/__BG_STRENGTH__/g, "—"); h = h.replace(/__BG_GRAIN__/g, "—");
           h = h.replace(/__SHADER_CONFIG__/g, "{}");
         }
-        h = h.replace(/__SHADER_VERTEX__/g, ""); h = h.replace(/__SHADER_FRAGMENT__/g, ""); h = h.replace(/__SHADER_SCRIPT__/g, "");
+        // Fill shader GLSL + renderer script
+        var _sg = window._sgShaders || {};
+        if (bg && bg.type && _sg.vertex) {
+          var vtxSrc = _sg.vertex || '';
+          var fragSrc = bg.fragmentShader || _sg[bg.shader] || _sg.defaults || '';
+          h = h.replace(/__SHADER_VERTEX__/g, vtxSrc.replace(/&/g,'&amp;').replace(/</g,'&lt;'));
+          h = h.replace(/__SHADER_FRAGMENT__/g, fragSrc.replace(/&/g,'&amp;').replace(/</g,'&lt;'));
+
+          var bgColors = [p.secondary, p.accent, p.tertiary || "#888"];
+          var _r = bg._render || { brightness:1, contrast:1, saturation:1 };
+          var isSphere = bg.type === "sphere";
+          var dist = isSphere ? 14 : bg.camDist;
+          var camX = (dist*Math.sin(bg.camPol*Math.PI/180)*Math.sin(bg.camAz*Math.PI/180)).toFixed(3);
+          var camY = (dist*Math.cos(bg.camPol*Math.PI/180)).toFixed(3);
+          var camZ = (dist*Math.sin(bg.camPol*Math.PI/180)*Math.cos(bg.camAz*Math.PI/180)).toFixed(3);
+          var ss = '<script type="module">\n';
+          ss += 'import*as THREE from"three";\n';
+          ss += 'import{EffectComposer}from"three/addons/postprocessing/EffectComposer.js";\n';
+          ss += 'import{RenderPass}from"three/addons/postprocessing/RenderPass.js";\n';
+          ss += 'import{HalftonePass}from"three/addons/postprocessing/HalftonePass.js";\n';
+          ss += 'const c=document.getElementById("design-bg"),r=new THREE.WebGLRenderer({canvas:c,antialias:!0,alpha:!0,preserveDrawingBuffer:!0});\n';
+          ss += 'r.setPixelRatio(Math.min(devicePixelRatio,2));\n';
+          ss += 'const s=new THREE.Scene,cam=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,100);\n';
+          ss += 'cam.position.set(' + camX + ',' + camY + ',' + camZ + ');cam.lookAt(0,0,0);';
+          ss += 'cam.zoom=' + (isSphere ? (bg.zoom||1) : 1) + ';cam.updateProjectionMatrix();\n';
+          ss += 's.add(new THREE.AmbientLight(0xffffff,.6));const dl=new THREE.DirectionalLight(0xffffff,.8);dl.position.set(5,5,5);s.add(dl);\n';
+          ss += 'const cs=n=>{const v=getComputedStyle(document.documentElement).getPropertyValue(n).trim();return new THREE.Color(v||"#111")};\n';
+          ss += 'const u={uTime:{value:0},uSpeed:{value:' + bg.speed + '},uDensity:{value:' + bg.density + '},uStrength:{value:' + bg.strength + '},';
+          ss += 'uColor1:{value:cs("--secondary")},uColor2:{value:cs("--accent")},uColor3:{value:cs("--tertiary")},';
+          ss += 'uBrightness:{value:' + _r.brightness + '},uContrast:{value:' + _r.contrast + '},uSaturation:{value:' + _r.saturation + '}};\n';
+          ss += 'const vtx=document.getElementById("vtx-src").textContent,frg=document.getElementById("frg-src").textContent;\n';
+          ss += 'const mat=new THREE.ShaderMaterial({vertexShader:vtx,fragmentShader:frg,uniforms:u,side:THREE.DoubleSide});\n';
+          ss += 'const m=new THREE.Mesh(new THREE.' + (isSphere ? 'SphereGeometry(1,128,128)' : 'PlaneGeometry(10,10,128,128)') + ',mat);\n';
+          ss += 'm.rotation.set(' + ((bg.rotX||0)*Math.PI/180).toFixed(3) + ',' + ((bg.rotY||0)*Math.PI/180).toFixed(3) + ',' + ((bg.rotZ||0)*Math.PI/180).toFixed(3) + ');';
+          ss += 'm.position.set(' + (bg.posX||0) + ',' + (bg.posY||0) + ',' + (bg.posZ||0) + ');s.add(m);\n';
+          ss += 'const comp=new EffectComposer(r);comp.addPass(new RenderPass(s,cam));\n';
+          ss += 'comp.addPass(new HalftonePass(innerWidth,innerHeight,{shape:1,radius:2,rotateR:Math.PI/12,rotateG:Math.PI/6,rotateB:Math.PI/4,scatter:1,blending:1,blendingMode:1,greyscale:!1}));\n';
+          ss += 'function rs(){r.setSize(innerWidth,innerHeight,!1);comp.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}\n';
+          ss += 'addEventListener("resize",rs);rs();\n';
+          ss += 'const t0=performance.now();\n';
+          ss += 'const pc=document.getElementById("bg-preview-canvas");let pctx=null;\n';
+          ss += 'if(pc){pc.width=pc.clientWidth*devicePixelRatio;pc.height=pc.clientHeight*devicePixelRatio;pctx=pc.getContext("2d");}\n';
+          ss += '(function tick(t){u.uTime.value=(t-t0)*.001;comp.render();if(pctx){pctx.drawImage(c,0,0,pc.width,pc.height);}requestAnimationFrame(tick)})(performance.now());\n';
+          ss += '<\/script>';
+          h = h.replace(/__SHADER_SCRIPT__/g, ss);
+        } else {
+          h = h.replace(/__SHADER_VERTEX__/g, "");
+          h = h.replace(/__SHADER_FRAGMENT__/g, "");
+          h = h.replace(/__SHADER_SCRIPT__/g, "");
+        }
         var dos = ["Use accent (" + p.accent + ") for the element to remember", "Maintain corners (" + cr.value + ")", "Keep headline weight consistent", "Use body font for readable text", "Tint neutrals toward accent"];
         var donts = ["Don't introduce a second accent", "Don't use accent for bg fills", "Don't use body text under 24px", "Don't repeat same entrance animation", "Don't use pure #000 for canvas"];
         h = h.replace(/__DOS__/g, dos.map(function(d) { return "<li>" + d + "</li>"; }).join("\n"));
