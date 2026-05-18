@@ -365,20 +365,46 @@ async function pollSubCompositionTimelines(
     }
     return true;
   })()`;
-  const timelinesBeforePoll = Number(
-    await page.evaluate(`Object.keys(window.__timelines || {}).length`),
-  );
+  // Observability snapshot: capture host IDs + timeline IDs before and after
+  // the poll so flaky CI runs can be correlated with whether the count-based
+  // rebind heuristic fired. Temporary — drop once the race condition behind
+  // the regression flakes is confirmed and patched.
+  const beforeSnapshot = (await page.evaluate(`(function() {
+    var hosts = document.querySelectorAll("[data-composition-id]");
+    var hostIds = [];
+    for (var i = 0; i < hosts.length; i++) {
+      var id = hosts[i].getAttribute("data-composition-id");
+      if (id) hostIds.push(id);
+    }
+    return { hostIds: hostIds, timelineIds: Object.keys(window.__timelines || {}) };
+  })()`)) as { hostIds: string[]; timelineIds: string[] };
+  const pollStart = Date.now();
   const ready = await pollPageExpression(page, expression, timeoutMs, intervalMs);
-  const timelinesAfterPoll = Number(
-    await page.evaluate(`Object.keys(window.__timelines || {}).length`),
-  );
-  if (ready && timelinesAfterPoll > timelinesBeforePoll) {
+  const pollMs = Date.now() - pollStart;
+  const afterTimelineIds = (await page.evaluate(
+    `Object.keys(window.__timelines || {})`,
+  )) as string[];
+  const beforeSet = new Set(beforeSnapshot.timelineIds);
+  const addedDuringPoll = afterTimelineIds.filter((id) => !beforeSet.has(id));
+  const rebindFired = ready && addedDuringPoll.length > 0;
+  if (rebindFired) {
     await page.evaluate(`(function() {
       if (typeof window.__hfForceTimelineRebind === "function") {
         window.__hfForceTimelineRebind();
       }
     })()`);
   }
+  console.log(
+    `[FrameCapture] pollSubCompositionTimelines ${JSON.stringify({
+      hostIds: beforeSnapshot.hostIds,
+      timelineIdsBefore: beforeSnapshot.timelineIds,
+      timelineIdsAfter: afterTimelineIds,
+      addedDuringPoll,
+      pollMs,
+      ready,
+      rebindFired,
+    })}`,
+  );
   if (!ready) {
     const missing = await page.evaluate(`(function() {
       var hosts = document.querySelectorAll("[data-composition-id]");
