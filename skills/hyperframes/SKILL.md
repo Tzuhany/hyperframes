@@ -51,7 +51,9 @@ Most prompts already answer 2-3 of these — a typical brief is 2-3 questions, n
 
    If the user declines both generation and picker → extract palette, font, and constraint values directly from the markdown. Proceed to Step 2.
 
-3. **Neither exists** → Offer the user a choice:
+3. **User provides a Figma URL** → Read [references/figma-to-design-html.md](references/figma-to-design-html.md) for the lossless extraction process. Pull colors, typography, and component properties directly from the Figma API. Craft a bespoke DESIGN.html using exact Figma values — no approximation. Then offer the picker for fine-tuning.
+
+4. **Neither exists and no Figma URL** → Offer the user a choice:
    1. **User named a style or mood?** → Read [visual-styles.md](./visual-styles.md) for the 8 named presets. Pick the closest match.
    2. **Want to browse options visually?** → Run the design picker: read [references/design-picker.md](references/design-picker.md) for the full workflow. This serves a visual picker page. The user configures mood, palette, typography, and motion in the browser, then exports a DESIGN.html.
    3. **Want to skip and go fast?** → Ask: mood, light or dark, any brand colors/fonts? Then pick a palette from [house-style.md](./house-style.md).
