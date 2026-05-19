@@ -8,16 +8,27 @@
 
 ## How to use this library
 
-**When planning a beat:**
+This library is a **reference frame**, not a template gallery. The website-to-hyperframes skill picks a mode per beat in step-3; honor that mode in step-5. The three modes:
 
-1. Open this file. Find the section that matches the technique you want.
-2. Open the section's `README.md`. Read 1-line summary of each scene.
-3. Open at least 2 scene HTML files. Read the full source — markup, GSAP timeline, easings, comments.
-4. Copy the closest scene into your `compositions/` directory. Rename. Mutate the content. Preserve the timeline structure and event density.
+| Mode             | When                                                                                                  | What you do                                                                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **copy+mutate**  | A single scene is a near-1:1 fit (same UI shape, similar length, just different brand/content).       | Seed `compositions/beat-N-name.html` from the cited scene's `index.html`. Swap content + colors + copy + duration. Keep timeline + easings.|
+| **recombine**    | No single scene fits, but 2-3 scenes each contribute a layer.                                          | Seed from the closest scene as structural base, then port patterns (counter logic, marker overlay, transition shape) from the others.       |
+| **fresh**        | The beat is novel; nothing close enough exists. Examples set the bar for taste.                       | Write from scratch. Use cited scenes as taste references for easing variety, continuous-motion practice, snapshot determinism.              |
+
+**Non-negotiable in every mode:** customize for the actual beat. If your output would be recognizable as "scene-X with content swapped," you copied without thinking. Examples are NEVER the finished beat — same scaffold, different soul.
+
+**Process per beat:**
+
+1. Find your beat's technique below in the lookup table. Open that scene's `index.html` and read the full source — markup, GSAP timeline, easings, comments.
+2. Pick the mode that fits your beat (decided in step-3-storyboard.md).
+3. In copy+mutate / recombine: seed from the cited scene. In fresh: write from scratch using examples as taste reference. **Always** customize.
+4. Lint, snapshot, verify the result.
 
 **When stuck on motion that feels static or boring:**
 
-- Look at section `12-combined-vignettes/` — these are full multi-technique scenes. The chat scene (`04-composed-ui/scene-02-chat-with-typing.html`) is the gold standard for narration-synced events.
+- Look at section `12-combined-vignettes/` — full multi-technique scenes. `scene-03-product-launch-beat/` combines 6 techniques (stroke-draw logo + kinetic headline + counter + marker + particle burst + breathing) in one beat — the most realistic "what a polished beat looks like" reference.
+- The chat scene ([`04-composed-ui/scene-02-chat-with-typing/`](04-composed-ui/scene-02-chat-with-typing/)) is the gold standard for narration-synced events.
 - Look at section `13-anti-patterns/` — the bad examples. Make sure your scene doesn't match any of these.
 
 ---
@@ -79,13 +90,24 @@ Need a specific technique? Use this table to find the canonical scene.
 | 3D iPhone mockups with composed app UI | [`04-composed-ui/scene-09-phone-mockups/`](04-composed-ui/scene-09-phone-mockups/) |
 | WebGL fragment shader + Canvas 2D fallback | [`07-html-in-canvas/scene-01-webgl-shader/`](07-html-in-canvas/scene-01-webgl-shader/) |
 | Canvas 2D procedural ASCII art + lightning | [`07-html-in-canvas/scene-02-canvas-ascii/`](07-html-in-canvas/scene-02-canvas-ascii/) |
+| Canvas 2D cursor blur + chromatic aberration text | [`07-html-in-canvas/scene-03-cursor-blur-sweeps/`](07-html-in-canvas/scene-03-cursor-blur-sweeps/) |
+| iPhone frame with live composed app UI inside (no screenshots) | [`07-html-in-canvas/scene-04-iphone-mockup-live/`](07-html-in-canvas/scene-04-iphone-mockup-live/) |
+| MacBook frame with simulated browser session inside | [`07-html-in-canvas/scene-05-macbook-mockup-live/`](07-html-in-canvas/scene-05-macbook-mockup-live/) |
 | SVG vinyl record + tonearm | [`08-svg-and-path/scene-01-vinyl-record/`](08-svg-and-path/scene-01-vinyl-record/) |
 | Editorial timeline diagram + SVG easing curve | [`09-counters-and-data/scene-01-timeline-diagram/`](09-counters-and-data/scene-01-timeline-diagram/) |
 | Vertical scroll-pan pipeline diagram | [`09-counters-and-data/scene-02-pipeline-diagram/`](09-counters-and-data/scene-02-pipeline-diagram/) |
+| Canonical 0 → 1,000,000 counter (33 deterministic `tl.set` steps) | [`09-counters-and-data/scene-03-counter-million-showcase/`](09-counters-and-data/scene-03-counter-million-showcase/) |
 | Radial bloom dot grid (stagger from center) | [`10-particles-and-ambient/scene-01-radial-bloom-grid/`](10-particles-and-ambient/scene-01-radial-bloom-grid/) |
 | Aurora end-card + particles + tri-color text gradient | [`10-particles-and-ambient/scene-02-aurora-end-card/`](10-particles-and-ambient/scene-02-aurora-end-card/) |
+| Scan-line CRT grid + telemetry HUD | [`10-particles-and-ambient/scene-03-scan-line-grid/`](10-particles-and-ambient/scene-03-scan-line-grid/) |
 | CSS 3D torus (16-segment orbital ring) | [`11-3d-and-parallax/scene-01-css-3d-torus/`](11-3d-and-parallax/scene-01-css-3d-torus/) |
+| Three.js pyramid roll with multi-material faces | [`11-3d-and-parallax/scene-02-vercel-triangle-roll/`](11-3d-and-parallax/scene-02-vercel-triangle-roll/) |
+| CSS 3D card tumble + clip-path wipe (6 cards) | [`11-3d-and-parallax/scene-03-card-flyby-deck/`](11-3d-and-parallax/scene-03-card-flyby-deck/) |
+| Three.js 3D text morph (MOTION ↔ DESIGN) + CRT HUD | [`11-3d-and-parallax/scene-04-anamorphic-text-crt/`](11-3d-and-parallax/scene-04-anamorphic-text-crt/) |
+| CSS 3D iPhone with tap/swipe gesture overlays | [`11-3d-and-parallax/scene-05-iphone-device-gesture/`](11-3d-and-parallax/scene-05-iphone-device-gesture/) |
 | 24-cell technique showcase grid | [`12-combined-vignettes/scene-01-techniques-grid/`](12-combined-vignettes/scene-01-techniques-grid/) |
+| Binary rain + centered terminal boot sequence | [`12-combined-vignettes/scene-02-binary-rain-boot/`](12-combined-vignettes/scene-02-binary-rain-boot/) |
+| **6-technique product-launch beat** (stroke-draw logo + kinetic headline + counter + marker + particles + breathing) | [`12-combined-vignettes/scene-03-product-launch-beat/`](12-combined-vignettes/scene-03-product-launch-beat/) |
 | BAD EXAMPLE: slideshow trap | [`13-anti-patterns/scene-01-slideshow-trap/`](13-anti-patterns/scene-01-slideshow-trap/) |
 | BAD EXAMPLE: static after entrance | [`13-anti-patterns/scene-02-static-after-entrance/`](13-anti-patterns/scene-02-static-after-entrance/) |
 | BAD EXAMPLE: power2.out everywhere | [`13-anti-patterns/scene-03-power2-everywhere/`](13-anti-patterns/scene-03-power2-everywhere/) |
@@ -99,15 +121,14 @@ Need a specific technique? Use this table to find the canonical scene.
 - [`_shared/shared-styles.css`](_shared/shared-styles.css) — design tokens (color palette, type scale, spacing). Every scene `<link>`s this so the catalog feels cohesive.
 - [`_shared/easing-glossary.md`](_shared/easing-glossary.md) — the 7 production easings and when to use each. Single source of truth.
 
-## Stitched reels
+## Stitched Grand Tour reel
 
-The `_stitched/` directory contains 2-3 long videos that play many scenes in sequence — useful for visual-gestalt review:
+All 57 scenes concatenated back-to-back as a single 6:26 MP4. Useful for visual-gestalt review or for sharing the library at a glance:
 
-- [`_stitched/grand-tour.html`](_stitched/grand-tour.html) — every section, end to end (~15-25 min rendered)
-- [`_stitched/motion-and-text.html`](_stitched/motion-and-text.html) — sections 1-3 + 12 highlights (kinetic typography reel)
-- [`_stitched/ui-and-effects.html`](_stitched/ui-and-effects.html) — sections 4-7 + 10-11 highlights (composed UI + VFX reel)
+- **Grand Tour reel:** https://www.heygenverse.com/s/b9cdfa1b-6fbd-45a1-b71f-7183edc9bd61/raw
+- **Browsable gallery (per-section grid, all 57 scenes as embedded videos):** https://www.heygenverse.com/a/1636f2fe-3ddc-4543-9a56-0d0b99538807
 
-Rendered MP4s live in `_stitched/renders/` and are mirrored on HeyGen Verse for browser viewing.
+Rebuild the reel after adding scenes: `ffmpeg -f concat -safe 0 -i /tmp/concat-list.txt -c copy out.mp4` where the concat list orders all scene MP4s in section sequence.
 
 ---
 
@@ -115,21 +136,25 @@ Rendered MP4s live in `_stitched/renders/` and are mirrored on HeyGen Verse for 
 
 Every scene in this library follows these rules. They exist so agents reading the library see consistent patterns, not random codebases.
 
-1. **Single HTML file**, structure exactly:
+1. **Standalone HTML5 document** per scene at `<section>/scene-NN-name/index.html`. Each scene is independently renderable via `npx tsx packages/cli/src/cli.ts render <scene-dir>`. Skeleton:
    ```html
-   <template>
+   <!doctype html>
+   <html lang="en">
+   <head>
+     <meta charset="UTF-8" />
+     <title>scene-NN-name</title>
+     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
      <style>/* scoped to this scene */</style>
-     <link rel="stylesheet" href="../_shared/shared-styles.css">
-     <div id="<scene-id>"
-          data-composition-id="<scene-id>"
+   </head>
+   <body>
+     <div id="scene-NN-name"
+          data-composition-id="scene-NN-name"
+          data-start="0"
+          data-duration="<seconds>"
           data-width="1920"
-          data-height="1080"
-          class="scene"
-          style="background: var(--bg-deep);">
+          data-height="1080">
        <!-- scene markup -->
-       <div class="scene-label">
-         Section <NN> · <Scene name> · <Technique>
-       </div>
+       <div class="scene-label">Section NN · &lt;Scene name&gt; · &lt;Technique&gt;</div>
      </div>
      <script>
        (function () {
@@ -137,13 +162,14 @@ Every scene in this library follows these rules. They exist so agents reading th
          window.__timelines = window.__timelines || {};
          var tl = gsap.timeline({ paused: true });
          // ... build timeline
-         window.__timelines["<scene-id>"] = tl;
+         window.__timelines["scene-NN-name"] = tl;
        })();
      </script>
-   </template>
+   </body>
+   </html>
    ```
 
-2. **`data-composition-id` matches the filename** (without `.html`). e.g. file `scene-01-soft-blur-in.html` → id `scene-01-soft-blur-in`.
+2. **`data-composition-id` matches the directory name** (which matches the scene id). e.g. directory `scene-01-soft-blur-in/` → id `scene-01-soft-blur-in`.
 
 3. **`.scene-label`** at bottom-left of every scene shows what technique is being demonstrated. Lets viewers of the stitched reel know what they're looking at without playing detective.
 
