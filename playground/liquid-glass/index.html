@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Liquid Glass</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="lib/liquid-dom.iife.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" crossorigin="anonymous" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px; overflow: hidden;
+        font-family: "Inter", sans-serif;
+        background: #0a0a12;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ── Layers ── */
+      #wallpaper {
+        position: absolute; inset: 0; z-index: 0;
+        overflow: hidden;
+      }
+      #wallpaper canvas {
+        width: 1920px !important; height: 1080px !important;
+        display: block;
+      }
+      #liquid-mount {
+        position: absolute; inset: 0; z-index: 1;
+      }
+      #liquid-mount canvas {
+        width: 1920px !important; height: 1080px !important;
+      }
+      .content-layer {
+        position: absolute; inset: 0; z-index: 2;
+        pointer-events: none;
+      }
+
+      /* ── Text content — NO glass styling, just layout ── */
+      .panel {
+        position: absolute;
+        pointer-events: auto;
+      }
+
+      .icon-svg {
+        width: 20px; height: 20px;
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.65);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+      }
+
+      /* Notification */
+      .notif-card {
+        width: 560px;
+        padding: 18px 24px;
+        display: flex; align-items: center; gap: 16px;
+      }
+      .notif-avatar {
+        width: 48px; height: 48px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 0.5px solid rgba(255, 255, 255, 0.18);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; font-weight: 700;
+        color: rgba(255, 255, 255, 0.8);
+        flex-shrink: 0;
+      }
+      .notif-body { flex: 1; min-width: 0; }
+      .notif-header {
+        display: flex; align-items: baseline;
+        justify-content: space-between; margin-bottom: 3px;
+      }
+      .notif-name { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.92); }
+      .notif-time { font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.4); }
+      .notif-text { font-size: 14px; font-weight: 400; color: rgba(255,255,255,0.65); line-height: 1.45; }
+
+      /* Context menu */
+      .ctx-menu { width: 260px; padding: 6px 0; }
+      .ctx-item {
+        display: flex; align-items: center; gap: 12px;
+        padding: 11px 18px; font-size: 16px; font-weight: 400;
+        color: rgba(255,255,255,0.9);
+      }
+      .ctx-sep { height: 0.5px; margin: 4px 14px; background: rgba(255,255,255,0.1); }
+      .ctx-footer { display: flex; padding: 10px 14px 8px; }
+      .ctx-footer-item {
+        flex: 1; display: flex; flex-direction: column;
+        align-items: center; gap: 6px;
+        font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.5);
+        padding: 6px 0;
+      }
+
+      /* Media */
+      .media-pill {
+        width: 480px; padding: 14px 22px;
+        display: flex; align-items: center; gap: 18px;
+      }
+      .media-art {
+        width: 52px; height: 52px; border-radius: 13px;
+        background: linear-gradient(135deg, #e8453c, #f2994a);
+        flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      }
+      .media-info { flex: 1; min-width: 0; }
+      .media-title { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.93); }
+      .media-artist { font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.45); margin-top: 2px; }
+      .media-controls { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+      .media-btn {
+        width: 34px; height: 34px;
+        display: flex; align-items: center; justify-content: center; opacity: 0.7;
+      }
+      .media-btn.play {
+        width: 40px; height: 40px;
+        background: rgba(255,255,255,0.14); border-radius: 50%;
+        border: 0.5px solid rgba(255,255,255,0.12); opacity: 1;
+      }
+
+      /* Search */
+      .search-bar {
+        width: 520px; padding: 14px 22px;
+        display: flex; align-items: center; gap: 10px;
+      }
+      .search-text { font-size: 16px; font-weight: 400; color: rgba(255,255,255,0.32); }
+
+      /* Toggle */
+      .toggle-row { width: 360px; padding: 5px; display: flex; }
+      .toggle-item {
+        flex: 1; padding: 10px 0; border-radius: 34px;
+        text-align: center; font-size: 13px; font-weight: 600;
+        color: rgba(255,255,255,0.4);
+      }
+      .toggle-item.active {
+        background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.92);
+      }
+
+      /* Slider */
+      .slider-panel {
+        width: 300px; padding: 16px 22px;
+        display: flex; align-items: center; gap: 14px;
+      }
+      .slider-track {
+        flex: 1; height: 4px; border-radius: 2px;
+        background: rgba(255,255,255,0.1);
+        position: relative; overflow: visible;
+      }
+      .slider-fill {
+        position: absolute; left: 0; top: 0; bottom: 0;
+        width: 65%; border-radius: 2px; background: rgba(255,255,255,0.55);
+      }
+      .slider-thumb {
+        position: absolute; left: 65%; top: 50%;
+        width: 16px; height: 16px; border-radius: 50%;
+        background: #fff; transform: translate(-50%, -50%);
+        box-shadow: 0 1px 6px rgba(0,0,0,0.3);
+      }
+
+      /* Widgets */
+      .widget-card {
+        width: 220px; height: 220px; padding: 20px;
+        display: flex; flex-direction: column; justify-content: space-between;
+      }
+      .widget-label {
+        font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.45);
+        text-transform: uppercase; letter-spacing: 0.08em;
+      }
+      .widget-value {
+        font-size: 56px; font-weight: 700; color: rgba(255,255,255,0.92);
+        letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1;
+      }
+      .widget-unit { font-size: 20px; font-weight: 400; color: rgba(255,255,255,0.4); }
+      .widget-sub { font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.35); }
+
+      /* Showcase */
+      .showcase-card { width: 680px; }
+      .showcase-header { padding: 24px 28px 0; display: flex; align-items: center; gap: 12px; }
+      .showcase-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        background: linear-gradient(135deg, #007AFF, #5856D6);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px; font-weight: 800; color: #fff;
+      }
+      .showcase-info { flex: 1; }
+      .showcase-app { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.85); }
+      .showcase-sub { font-size: 11px; font-weight: 400; color: rgba(255,255,255,0.4); }
+      .showcase-badge {
+        padding: 5px 14px; border-radius: 16px;
+        background: rgba(255,255,255,0.1); border: 0.5px solid rgba(255,255,255,0.12);
+        font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.75);
+      }
+      .showcase-body { padding: 16px 28px 24px; }
+      .showcase-title {
+        font-size: 26px; font-weight: 700; color: rgba(255,255,255,0.93);
+        letter-spacing: -0.02em; margin-bottom: 6px;
+      }
+      .showcase-text { font-size: 14px; font-weight: 400; color: rgba(255,255,255,0.5); line-height: 1.5; }
+      .showcase-preview {
+        margin: 0 28px 20px; height: 160px; border-radius: 14px;
+        background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.06);
+        display: flex; align-items: center; justify-content: center;
+      }
+
+      /* Pills */
+      .pill-chip {
+        padding: 9px 20px; font-size: 13px; font-weight: 600;
+        color: rgba(255,255,255,0.8);
+        display: inline-flex; align-items: center; gap: 8px;
+      }
+      .pill-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+      /* CC grid */
+      .cc-grid {
+        position: absolute; display: grid;
+        grid-template-columns: repeat(2, 100px);
+        grid-template-rows: repeat(2, 100px);
+        gap: 10px;
+      }
+      .cc-tile {
+        display: flex; align-items: center; justify-content: center;
+      }
+
+      /* Flag notice */
+      .flag-notice {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        text-align: center; padding: 40px 56px; border-radius: 24px;
+        background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.25);
+        z-index: 100;
+      }
+      .flag-notice h2 { font-size: 22px; color: #eab308; margin-bottom: 10px; }
+      .flag-notice p { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+      .flag-notice code {
+        display: inline-block; margin-top: 10px; padding: 8px 16px; border-radius: 10px;
+        background: rgba(255,255,255,0.06); font-family: monospace; font-size: 13px; color: #fbbf24;
+      }
+      .flag-notice .steps { margin-top: 14px; text-align: left; }
+      .flag-notice .steps li {
+        font-size: 13px; color: rgba(255,255,255,0.5);
+        margin: 4px 0; list-style: decimal; margin-left: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="liquid-glass" data-start="0" data-duration="20" data-width="1920" data-height="1080">
+
+      <!-- Background layer — captured by Liquid DOM Html node -->
+      <div id="wallpaper"></div>
+
+      <!-- Liquid DOM renders here -->
+      <div id="liquid-mount"></div>
+
+      <!-- Text content floats above the Liquid DOM canvas -->
+      <div class="content-layer">
+        <!-- S1 -->
+        <div class="panel notif-card" id="notif1" style="top: 320px; left: 220px;">
+          <div class="notif-avatar">JA</div>
+          <div class="notif-body">
+            <div class="notif-header">
+              <span class="notif-name">John Appleseed</span>
+              <span class="notif-time">27m ago</span>
+            </div>
+            <div class="notif-text">My orchard just shipped a critical bug fix. The apples now fall closer to the tree.</div>
+          </div>
+        </div>
+        <div class="panel notif-card" id="notif2" style="top: 440px; left: 260px;">
+          <div class="notif-avatar">KL</div>
+          <div class="notif-body">
+            <div class="notif-header">
+              <span class="notif-name">Kate Linen</span>
+              <span class="notif-time">1h ago</span>
+            </div>
+            <div class="notif-text">The new design system is live. Glass everywhere.</div>
+          </div>
+        </div>
+        <div class="panel ctx-menu" id="ctx-menu" style="top: 280px; left: 1200px;">
+          <div class="ctx-item">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            Share
+          </div>
+          <div class="ctx-item">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            Add to Bookmarks
+          </div>
+          <div class="ctx-item">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+            Add Bookmark to...
+          </div>
+          <div class="ctx-sep"></div>
+          <div class="ctx-item">
+            <svg class="icon-svg" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Tab
+          </div>
+          <div class="ctx-item">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            New Private Tab
+          </div>
+          <div class="ctx-sep"></div>
+          <div class="ctx-footer">
+            <div class="ctx-footer-item">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              Bookmarks
+            </div>
+            <div class="ctx-footer-item">
+              <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              All Tabs
+            </div>
+          </div>
+        </div>
+
+        <!-- S2 -->
+        <div class="panel search-bar" id="search-bar" style="top: 200px; left: 700px;">
+          <svg class="icon-svg" viewBox="0 0 24 24" style="opacity: 0.5;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span class="search-text">Search or enter website name</span>
+        </div>
+        <div class="panel toggle-row" id="toggle-row" style="top: 310px; left: 780px;">
+          <div class="toggle-item active">All</div>
+          <div class="toggle-item">Favorites</div>
+          <div class="toggle-item">Recent</div>
+        </div>
+        <div class="panel media-pill" id="media-pill" style="top: 460px; left: 720px;">
+          <div class="media-art">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          </div>
+          <div class="media-info">
+            <div class="media-title">Blinding Lights</div>
+            <div class="media-artist">The Weeknd</div>
+          </div>
+          <div class="media-controls">
+            <div class="media-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5" stroke="white" stroke-width="2"/></svg></div>
+            <div class="media-btn play"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+            <div class="media-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="white" stroke-width="2"/></svg></div>
+          </div>
+        </div>
+        <div class="panel slider-panel" id="slider" style="top: 600px; left: 810px;">
+          <svg class="icon-svg" viewBox="0 0 24 24" style="width:18px;height:18px;opacity:0.5;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <div class="slider-track">
+            <div class="slider-fill" id="slider-fill"></div>
+            <div class="slider-thumb" id="slider-thumb"></div>
+          </div>
+        </div>
+
+        <!-- S3 -->
+        <div class="panel widget-card" id="widget1" style="top: 220px; left: 280px;">
+          <div class="widget-label">Temperature</div>
+          <div><span class="widget-value">24</span><span class="widget-unit">&deg;</span></div>
+          <div class="widget-sub">San Francisco, CA</div>
+        </div>
+        <div class="panel widget-card" id="widget2" style="top: 220px; left: 530px;">
+          <div class="widget-label">Battery</div>
+          <div><span class="widget-value">87</span><span class="widget-unit">%</span></div>
+          <div class="widget-sub">5h 42m remaining</div>
+        </div>
+        <div class="panel widget-card" id="widget3" style="top: 220px; left: 780px;">
+          <div class="widget-label">Steps</div>
+          <div><span class="widget-value">8.2</span><span class="widget-unit">K</span></div>
+          <div class="widget-sub">Goal: 10,000</div>
+        </div>
+        <div class="panel showcase-card" id="showcase" style="top: 260px; left: 1080px;">
+          <div class="showcase-header">
+            <div class="showcase-icon" style="background: transparent;">
+            <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.1851 57.8021L33.1145 73.8313C36.2202 75.9978 41.5173 73.5433 42.4816 69.4984L51.7611 30.4271C52.7253 26.3822 48.5802 23.9277 44.4602 26.0942L13.917 42.1235C6.96677 45.7676 4.97564 54.1579 10.1851 57.8021Z" fill="url(#hf-mark0)"/>
+              <path d="M87.5129 57.5141L56.9696 73.5433C52.8371 75.7098 48.7046 73.2553 49.6688 69.2104L58.9483 30.1391C59.9125 26.0942 65.2097 23.6397 68.3154 25.8062L91.2447 41.8354C96.4668 45.4796 94.4631 53.8699 87.5129 57.5141Z" fill="url(#hf-mark1)"/>
+              <defs>
+                <linearGradient id="hf-mark0" x1="48.5676" y1="25" x2="44.7804" y2="71.9384" gradientUnits="userSpaceOnUse"><stop stop-color="#06E3FA"/><stop offset="1" stop-color="#4FDB5E"/></linearGradient>
+                <linearGradient id="hf-mark1" x1="54.8282" y1="73.8392" x2="72.0989" y2="32.8932" gradientUnits="userSpaceOnUse"><stop stop-color="#06E3FA"/><stop offset="1" stop-color="#4FDB5E"/></linearGradient>
+              </defs>
+            </svg>
+          </div>
+            <div class="showcase-info">
+              <div class="showcase-app">HyperFrames</div>
+              <div class="showcase-sub">Video Framework</div>
+            </div>
+            <div class="showcase-badge">Open</div>
+          </div>
+          <div class="showcase-body">
+            <div class="showcase-title">Write HTML, Render Video</div>
+            <div class="showcase-text">The open-source framework for programmatic video creation. Compositions are HTML files with GSAP timelines.</div>
+          </div>
+          <div class="showcase-preview">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+        </div>
+        <div class="panel pill-chip" id="pill1" style="top: 520px; left: 320px;">
+          <span class="pill-dot" style="background:#34C759;"></span> Connected
+        </div>
+        <div class="panel pill-chip" id="pill2" style="top: 520px; left: 490px;">
+          <span class="pill-dot" style="background:#007AFF;"></span> Bluetooth
+        </div>
+        <div class="panel pill-chip" id="pill3" style="top: 520px; left: 650px;">
+          <span class="pill-dot" style="background:#FF9500;"></span> Focus
+        </div>
+        <div class="panel cc-grid" id="cc-grid" style="top: 600px; left: 320px;">
+          <div class="cc-tile">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="width:28px;height:28px;stroke:rgba(0,122,255,0.9);"><path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/></svg>
+          </div>
+          <div class="cc-tile">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="width:28px;height:28px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </div>
+          <div class="cc-tile">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="width:28px;height:28px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="cc-tile">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="width:28px;height:28px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flag notice if WebGPU/drawElement unavailable -->
+      <div class="flag-notice" id="flag-notice" style="display: none;">
+        <h2>Chrome Flags Required</h2>
+        <p>Liquid DOM needs WebGPU + drawElement. Enable both:</p>
+        <ol class="steps">
+          <li>Open <code>chrome://flags/#enable-unsafe-webgpu</code> → Enabled</li>
+          <li>Open <code>chrome://flags/#canvas-draw-element</code> → Enabled</li>
+          <li>Restart Chrome, then reload this page</li>
+        </ol>
+      </div>
+    </div>
+
+    <script>
+      // ── Three.js wavy aurora shader ──
+      (function () {
+        var container = document.getElementById("wallpaper");
+        var scene = new THREE.Scene();
+        var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        var renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false });
+        renderer.setSize(1920, 1080);
+        renderer.setPixelRatio(1);
+        container.appendChild(renderer.domElement);
+
+        var vs = "varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }";
+        var fs = [
+          "precision highp float;",
+          "varying vec2 vUv;",
+          "uniform float uTime;",
+          "vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}",
+          "vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}",
+          "vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}",
+          "vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}",
+          "float snoise(vec3 v){",
+          "  const vec2 C=vec2(1.0/6.0,1.0/3.0);const vec4 D=vec4(0.0,0.5,1.0,2.0);",
+          "  vec3 i=floor(v+dot(v,C.yyy));vec3 x0=v-i+dot(i,C.xxx);",
+          "  vec3 g=step(x0.yzx,x0.xyz);vec3 l=1.0-g;",
+          "  vec3 i1=min(g.xyz,l.zxy);vec3 i2=max(g.xyz,l.zxy);",
+          "  vec3 x1=x0-i1+C.xxx;vec3 x2=x0-i2+C.yyy;vec3 x3=x0-D.yyy;",
+          "  i=mod289(i);",
+          "  vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));",
+          "  float n_=0.142857142857;vec3 ns=n_*D.wyz-D.xzx;",
+          "  vec4 j=p-49.0*floor(p*ns.z*ns.z);vec4 x_=floor(j*ns.z);vec4 y_=floor(j-7.0*x_);",
+          "  vec4 x=x_*ns.x+ns.yyyy;vec4 y=y_*ns.x+ns.yyyy;vec4 h=1.0-abs(x)-abs(y);",
+          "  vec4 b0=vec4(x.xy,y.xy);vec4 b1=vec4(x.zw,y.zw);",
+          "  vec4 s0=floor(b0)*2.0+1.0;vec4 s1=floor(b1)*2.0+1.0;",
+          "  vec4 sh=-step(h,vec4(0.0));",
+          "  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;",
+          "  vec3 p0=vec3(a0.xy,h.x);vec3 p1=vec3(a0.zw,h.y);vec3 p2=vec3(a1.xy,h.z);vec3 p3=vec3(a1.zw,h.w);",
+          "  vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));",
+          "  p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;",
+          "  vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);m=m*m;",
+          "  return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));",
+          "}",
+          "void main(){",
+          "  vec2 uv=vUv;float ar=1920.0/1080.0;vec2 p=vec2(uv.x*ar,uv.y);float t=uTime*0.06;",
+          "  float wx=snoise(vec3(p*1.4,t*0.5))*0.2;float wy=snoise(vec3(p*1.4+100.0,t*0.5))*0.2;",
+          "  vec2 wp=p+vec2(wx,wy);",
+          "  vec3 base=mix(vec3(0.10,0.02,0.22),vec3(0.04,0.10,0.25),smoothstep(0.0,1.0,uv.x*0.6+uv.y*0.4));",
+          "  float angle=0.65;float ridgeUv=dot(wp,vec2(cos(angle),sin(angle)));",
+          "  float ridge1=sin(ridgeUv*8.0+t*2.0+snoise(vec3(wp*0.8,t))*1.5);",
+          "  float ridge2=sin(ridgeUv*5.5-t*1.4+snoise(vec3(wp*1.2+50.0,t*0.7))*2.0);",
+          "  float ridge3=sin(ridgeUv*12.0+t*3.0+snoise(vec3(wp*0.6+80.0,t*0.4))*1.0);",
+          "  float crease1=pow(abs(ridge1),0.35)*sign(ridge1)*0.5+0.5;",
+          "  float crease2=pow(abs(ridge2),0.4)*sign(ridge2)*0.5+0.5;",
+          "  float crease3=pow(abs(ridge3),0.5)*sign(ridge3)*0.5+0.5;",
+          "  vec3 warm=mix(vec3(0.9,0.4,0.08),vec3(0.95,0.65,0.15),crease1);",
+          "  float warmZone=smoothstep(0.15,0.75,uv.x+uv.y*0.4+snoise(vec3(uv*2.0,t))*0.3);",
+          "  vec3 cool=mix(vec3(0.02,0.4,0.55),vec3(0.25,0.7,0.82),crease2);",
+          "  float coolZone=smoothstep(0.25,0.85,1.2-uv.x+uv.y*0.5+snoise(vec3(uv*2.0+40.0,t*0.8))*0.25);",
+          "  vec3 hot=mix(vec3(0.8,0.1,0.4),vec3(0.6,0.08,0.65),crease3);",
+          "  float hotZone=smoothstep(0.5,0.9,snoise(vec3(uv*2.5+20.0,t*0.6))*0.5+0.5);",
+          "  vec3 col=base;",
+          "  col=mix(col,warm,warmZone*0.75*smoothstep(0.3,0.7,crease1));",
+          "  col=mix(col,cool,coolZone*0.65*smoothstep(0.2,0.65,crease2));",
+          "  col=mix(col,hot,hotZone*0.5*smoothstep(0.35,0.8,crease3));",
+          "  float edgeGlow=pow(1.0-abs(ridge1),6.0)*0.4+pow(1.0-abs(ridge2),5.0)*0.25;",
+          "  col+=edgeGlow*mix(warm,cool,uv.x)*0.8;",
+          "  col*=1.0-pow(abs(ridge1),4.0)*0.15;",
+          "  float vig=1.0-smoothstep(0.5,1.5,length((uv-0.5)*vec2(1.3,1.0)));",
+          "  col*=0.65+vig*0.5;",
+          "  float luma=dot(col,vec3(0.299,0.587,0.114));col=mix(vec3(luma),col,1.5);",
+          "  col=clamp(col,0.0,1.0);col=pow(col,vec3(0.9));",
+          "  gl_FragColor=vec4(col,1.0);",
+          "}"
+        ].join("\n");
+
+        var uniforms = { uTime: { value: 0.0 } };
+        var mat = new THREE.ShaderMaterial({ vertexShader: vs, fragmentShader: fs, uniforms: uniforms });
+        scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat));
+        window.__shaderState = { uniforms: uniforms, renderer: renderer, scene: scene, camera: camera };
+        renderer.render(scene, camera);
+      })();
+
+      // ── Liquid DOM glass scene ──
+      (function () {
+        var C = LiquidDOM.Container;
+        var G = LiquidDOM.Glass;
+        var H = LiquidDOM.Html;
+        var R = LiquidDOM.Renderer;
+        var S = LiquidDOM.Scene;
+
+        var ok = false;
+        var liq = {};
+
+        try {
+          if (!navigator.gpu) throw new Error("WebGPU not available");
+
+          var scene = new S();
+
+          // Backdrop — captures the Three.js wallpaper div
+          scene.add(new H({
+            width: 1920, height: 1080, zIndex: -1,
+            element: document.getElementById("wallpaper")
+          }));
+
+          // Glass factory — shared optical properties
+          function makeGlass(w, h, cr, opts) {
+            opts = opts || {};
+            var c = new C({
+              x: -2000, y: 540,
+              blur: opts.blur || 12,
+              bezelWidth: opts.bezel || 22,
+              thickness: opts.thickness || 60,
+              ior: opts.ior || 1.5,
+              dispersion: opts.dispersion || 0,
+              specularStrength: opts.specular || 1,
+              specularWidth: 1,
+              specularSharpness: opts.sharpness || 3,
+              tint: opts.tint || { r: 1, g: 1, b: 1, a: 0.08 },
+              shadowColor: { r: 0, g: 0, b: 0, a: opts.shadowAlpha || 0.12 },
+              shadowOffsetY: opts.shadowY || 12,
+              shadowBlur: opts.shadowBlur || 36,
+            });
+            c.add(new G({ width: w, height: h, cornerRadius: cr }));
+            scene.add(c);
+            return c;
+          }
+
+          // S1: Notification pills + context menu
+          // Positions are center-based: x = left + width/2, y = top + height/2
+          liq.notif1 = makeGlass(560, 88, 40, { blur: 14, thickness: 70, bezel: 18 });
+          liq.notif2 = makeGlass(560, 82, 40, { blur: 14, thickness: 70, bezel: 18 });
+          liq.ctxMenu = makeGlass(260, 360, 16, { blur: 10, thickness: 50, bezel: 14 });
+
+          // S2: Media controls
+          liq.searchBar = makeGlass(520, 50, 18, { blur: 10, thickness: 40 });
+          liq.toggleRow = makeGlass(360, 44, 40, { blur: 10, thickness: 35 });
+          liq.mediaPill = makeGlass(480, 82, 44, { blur: 14, thickness: 65, bezel: 20 });
+          liq.slider = makeGlass(300, 54, 22, { blur: 10, thickness: 40 });
+
+          // S3: Widgets + showcase
+          liq.widget1 = makeGlass(220, 220, 28, { blur: 10, thickness: 55 });
+          liq.widget2 = makeGlass(220, 220, 28, { blur: 10, thickness: 55 });
+          liq.widget3 = makeGlass(220, 220, 28, { blur: 10, thickness: 55 });
+          liq.showcase = makeGlass(680, 420, 28, { blur: 12, thickness: 60, bezel: 24 });
+          liq.pill1 = makeGlass(130, 36, 40, { blur: 8, thickness: 30, bezel: 10 });
+          liq.pill2 = makeGlass(130, 36, 40, { blur: 8, thickness: 30, bezel: 10 });
+          liq.pill3 = makeGlass(110, 36, 40, { blur: 8, thickness: 30, bezel: 10 });
+          liq.ccTile1 = makeGlass(100, 100, 24, { blur: 8, thickness: 40 });
+          liq.ccTile2 = makeGlass(100, 100, 24, { blur: 8, thickness: 40 });
+          liq.ccTile3 = makeGlass(100, 100, 24, { blur: 8, thickness: 40 });
+          liq.ccTile4 = makeGlass(100, 100, 24, { blur: 8, thickness: 40 });
+
+          var renderer = new R({ scene: scene });
+          document.getElementById("liquid-mount").appendChild(renderer.canvas);
+
+          liq.renderer = renderer;
+          ok = true;
+        } catch (e) {
+          console.error("Liquid DOM init failed:", e);
+          document.getElementById("flag-notice").style.display = "block";
+        }
+
+        // ── GSAP Timeline ──
+        window.__timelines = window.__timelines || {};
+        var tl = gsap.timeline({ paused: true });
+        var ss = window.__shaderState;
+
+        // Shader + Liquid DOM render driver
+        tl.to({}, {
+          duration: 20,
+          onUpdate: function () {
+            ss.uniforms.uTime.value = tl.time();
+            ss.renderer.render(ss.scene, ss.camera);
+            if (ok) liq.renderer.render();
+          }
+        }, 0);
+
+        // Hide later scenes
+        tl.set("#search-bar, #toggle-row, #media-pill, #slider", { opacity: 0 }, 0);
+        tl.set("#widget1, #widget2, #widget3, #showcase, #pill1, #pill2, #pill3, #cc-grid", { opacity: 0 }, 0);
+
+        if (ok) {
+          // ═══ SCENE 1: Notifications + Context Menu (0–6.5s) ═══
+
+          // Glass shapes slide in (top-left coords matching CSS left/top)
+          tl.to(liq.notif1, { x: 220, y: 320, duration: 0.7, ease: "power3.out" }, 0.2);
+          tl.to(liq.notif2, { x: 260, y: 440, duration: 0.65, ease: "power3.out" }, 0.55);
+          tl.to(liq.ctxMenu, { x: 1200, y: 280, duration: 0.5, ease: "back.out(1.6)" }, 0.9);
+
+          // DOM content follows glass
+          tl.from("#notif1", { x: -60, opacity: 0, duration: 0.7, ease: "power3.out" }, 0.2);
+          tl.from("#notif2", { x: -50, opacity: 0, duration: 0.65, ease: "power3.out" }, 0.55);
+          tl.from("#ctx-menu", { scale: 0.88, opacity: 0, duration: 0.5, ease: "back.out(1.6)" }, 0.9);
+
+          // Breathing float — sync glass + DOM (both move same direction in screen space)
+          tl.to(liq.notif1, { y: "-=5", duration: 2.2, ease: "sine.inOut", yoyo: true, repeat: 1 }, 1.8);
+          tl.to("#notif1", { y: "-=5", duration: 2.2, ease: "sine.inOut", yoyo: true, repeat: 1 }, 1.8);
+          tl.to(liq.notif2, { y: "-=7", duration: 2.4, ease: "sine.inOut", yoyo: true, repeat: 1 }, 2.0);
+          tl.to("#notif2", { y: "-=7", duration: 2.4, ease: "sine.inOut", yoyo: true, repeat: 1 }, 2.0);
+          tl.to(liq.ctxMenu, { y: "-=4", duration: 2.0, ease: "sine.inOut", yoyo: true, repeat: 1 }, 2.2);
+          tl.to("#ctx-menu", { y: "-=4", duration: 2.0, ease: "sine.inOut", yoyo: true, repeat: 1 }, 2.2);
+
+          // Light direction sweep
+          [liq.notif1, liq.notif2, liq.ctxMenu].forEach(function (c, i) {
+            tl.to(c, { lightDirection: -Math.PI / 3, duration: 1.5, ease: "sine.inOut" }, 3.5 + i * 0.2);
+            tl.to(c, { lightDirection: Math.PI / 6, duration: 1.5, ease: "sine.inOut" }, 5.0);
+          });
+
+          // Exit S1
+          tl.to(liq.notif1, { x: -400, duration: 0.35, ease: "power2.in" }, 5.8);
+          tl.to("#notif1", { x: -50, opacity: 0, duration: 0.35, ease: "power2.in" }, 5.8);
+          tl.to(liq.notif2, { x: -400, duration: 0.35, ease: "power2.in" }, 5.95);
+          tl.to("#notif2", { x: -40, opacity: 0, duration: 0.35, ease: "power2.in" }, 5.95);
+          tl.to(liq.ctxMenu, { x: 2400, duration: 0.3, ease: "power2.in" }, 6.1);
+          tl.to("#ctx-menu", { scale: 0.92, opacity: 0, duration: 0.3, ease: "power2.in" }, 6.1);
+
+          // ═══ SCENE 2: Media + Controls (6.8–13.5s) ═══
+
+          tl.to(liq.searchBar, { x: 700, y: 200, duration: 0.55, ease: "power3.out" }, 6.8);
+          tl.fromTo("#search-bar", { y: 25, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, 6.8);
+
+          tl.to(liq.toggleRow, { x: 780, y: 310, duration: 0.5, ease: "expo.out" }, 7.1);
+          tl.fromTo("#toggle-row", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "expo.out" }, 7.1);
+
+          tl.to(liq.mediaPill, { x: 720, y: 460, duration: 0.6, ease: "power3.out" }, 7.4);
+          tl.fromTo("#media-pill", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, 7.4);
+
+          tl.to(liq.slider, { x: 810, y: 600, duration: 0.5, ease: "power2.out" }, 7.7);
+          tl.fromTo("#slider", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }, 7.7);
+
+          // Slider anim
+          tl.to("#slider-fill", { width: "88%", duration: 3, ease: "power1.inOut" }, 9);
+          tl.to("#slider-thumb", { left: "88%", duration: 3, ease: "power1.inOut" }, 9);
+
+          // Light sweep S2
+          [liq.searchBar, liq.toggleRow, liq.mediaPill, liq.slider].forEach(function (c, i) {
+            tl.to(c, { lightDirection: -Math.PI / 2, duration: 2, ease: "sine.inOut" }, 9 + i * 0.3);
+            tl.to(c, { lightDirection: Math.PI / 4, duration: 2, ease: "sine.inOut" }, 11);
+          });
+
+          // Exit S2
+          var s2Glass = [liq.searchBar, liq.toggleRow, liq.mediaPill, liq.slider];
+          s2Glass.forEach(function (c) { tl.to(c, { x: -600, duration: 0.35, ease: "power2.in" }, 12.8); });
+          tl.to("#search-bar", { y: -18, opacity: 0, duration: 0.35, ease: "power2.in" }, 12.8);
+          tl.to("#toggle-row", { y: -14, opacity: 0, duration: 0.3, ease: "power2.in" }, 12.9);
+          tl.to("#media-pill", { y: 18, opacity: 0, duration: 0.35, ease: "power2.in" }, 13.0);
+          tl.to("#slider", { y: 18, opacity: 0, duration: 0.3, ease: "power2.in" }, 13.1);
+
+          // ═══ SCENE 3: Widgets + Showcase (13.5–20s) ═══
+
+          tl.to(liq.widget1, { x: 280, y: 220, duration: 0.6, ease: "power3.out" }, 13.6);
+          tl.fromTo("#widget1", { y: 35, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, 13.6);
+
+          tl.to(liq.widget2, { x: 530, y: 220, duration: 0.6, ease: "expo.out" }, 13.8);
+          tl.fromTo("#widget2", { y: 35, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "expo.out" }, 13.8);
+
+          tl.to(liq.widget3, { x: 780, y: 220, duration: 0.6, ease: "power3.out" }, 14.0);
+          tl.fromTo("#widget3", { y: 35, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, 14.0);
+
+          tl.to(liq.showcase, { x: 1080, y: 260, duration: 0.7, ease: "power3.out" }, 13.9);
+          tl.fromTo("#showcase", { y: 45, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, 13.9);
+
+          tl.to(liq.pill1, { x: 320, y: 520, duration: 0.4, ease: "back.out(1.3)" }, 14.6);
+          tl.fromTo("#pill1", { y: 12, scale: 0.92, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.3)" }, 14.6);
+
+          tl.to(liq.pill2, { x: 490, y: 520, duration: 0.4, ease: "back.out(1.3)" }, 14.75);
+          tl.fromTo("#pill2", { y: 12, scale: 0.92, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.3)" }, 14.75);
+
+          tl.to(liq.pill3, { x: 650, y: 520, duration: 0.4, ease: "back.out(1.3)" }, 14.9);
+          tl.fromTo("#pill3", { y: 12, scale: 0.92, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.3)" }, 14.9);
+
+          // CC tiles — grid starts at left:320, top:600, with 100px tiles + 10px gap
+          tl.to(liq.ccTile1, { x: 320, y: 600, duration: 0.5, ease: "power3.out" }, 15.0);
+          tl.to(liq.ccTile2, { x: 430, y: 600, duration: 0.5, ease: "power3.out" }, 15.1);
+          tl.to(liq.ccTile3, { x: 320, y: 710, duration: 0.5, ease: "power3.out" }, 15.15);
+          tl.to(liq.ccTile4, { x: 430, y: 710, duration: 0.5, ease: "power3.out" }, 15.2);
+          tl.fromTo("#cc-grid", { y: 25, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 15.0);
+
+          // Light sweep S3
+          var s3Glass = [liq.widget1, liq.widget2, liq.widget3, liq.showcase, liq.pill1, liq.pill2, liq.pill3, liq.ccTile1, liq.ccTile2, liq.ccTile3, liq.ccTile4];
+          s3Glass.forEach(function (c, i) {
+            tl.to(c, { lightDirection: -Math.PI / 3, duration: 2, ease: "sine.inOut" }, 16 + i * 0.1);
+            tl.to(c, { lightDirection: Math.PI / 5, duration: 2, ease: "sine.inOut" }, 18);
+          });
+
+          // Final exit — slide glass offscreen
+          var exitGlass = [liq.widget1, liq.widget2, liq.widget3, liq.showcase, liq.pill1, liq.pill2, liq.pill3, liq.ccTile1, liq.ccTile2, liq.ccTile3, liq.ccTile4];
+          exitGlass.forEach(function (c, i) {
+            tl.to(c, { y: -400, duration: 0.35, ease: "power2.in" }, 19.0 + i * 0.04);
+          });
+          var exitDom = ["#widget1", "#widget2", "#widget3", "#showcase", "#pill1", "#pill2", "#pill3", "#cc-grid"];
+          exitDom.forEach(function (sel, i) {
+            tl.to(sel, { opacity: 0, y: "-=12", duration: 0.35, ease: "power2.in" }, 19.0 + i * 0.06);
+          });
+        } else {
+          // No Liquid DOM — just animate DOM content with opacity
+          tl.from("#notif1", { x: -60, opacity: 0, duration: 0.7, ease: "power3.out" }, 0.2);
+          tl.from("#notif2", { x: -50, opacity: 0, duration: 0.65, ease: "power3.out" }, 0.55);
+          tl.from("#ctx-menu", { scale: 0.88, opacity: 0, duration: 0.5, ease: "back.out(1.6)" }, 0.9);
+        }
+
+        window.__timelines["liquid-glass"] = tl;
+      })();
+    </script>
+  </body>
+</html>
