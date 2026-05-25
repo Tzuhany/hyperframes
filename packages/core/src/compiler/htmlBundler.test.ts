@@ -250,6 +250,43 @@ describe("bundleToSingleHtml", () => {
     expect(hostEl?.hasAttribute("data-composition-src")).toBe(false);
   });
 
+  it("inlines local scripts referenced by sub-compositions into the bundle", async () => {
+    const dir = makeTempProject({
+      "index.html": `<!doctype html>
+<html><head>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+</head><body>
+  <div id="root" data-composition-id="main" data-width="1920" data-height="1080">
+    <div id="scene-host"
+      data-composition-id="scene"
+      data-composition-src="compositions/scene.html"
+      data-start="0" data-duration="5"></div>
+  </div>
+  <script>window.__timelines={}; const tl=gsap.timeline({paused:true}); window.__timelines["main"]=tl;</script>
+</body></html>`,
+      "compositions/scene.html": `<template id="scene-template">
+  <div data-composition-id="scene" data-width="1920" data-height="1080">
+    <div id="scene-copy">Scene</div>
+    <script src="shared/dist/vendor/powerglitch.min.js"></script>
+    <script src="shared/dist/index.js"></script>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene"] = gsap.timeline({ paused: true });
+    </script>
+  </div>
+</template>`,
+      "shared/dist/vendor/powerglitch.min.js": `window.PowerGlitch = { glitch(){ return { startGlitch(){}, stopGlitch(){} }; } };`,
+      "shared/dist/index.js": `window.__HF_SHARED_TEST__ = "shared-runtime-loaded";`,
+    });
+
+    const bundled = await bundleToSingleHtml(dir);
+
+    expect(bundled).toContain('__HF_SHARED_TEST__ = "shared-runtime-loaded"');
+    expect(bundled).toContain("window.PowerGlitch = { glitch()");
+    expect(bundled).not.toContain('src="shared/dist/index.js"');
+    expect(bundled).not.toContain('src="shared/dist/vendor/powerglitch.min.js"');
+  });
+
   it("does not duplicate CDN scripts already present in the main document", async () => {
     const dir = makeTempProject({
       "index.html": `<!doctype html>

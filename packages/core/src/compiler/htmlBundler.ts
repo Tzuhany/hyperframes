@@ -840,6 +840,14 @@ export async function bundleToSingleHtml(
   // Inject external scripts from sub-compositions (e.g., Lottie CDN)
   // that aren't already present in the main document.
   for (const extSrc of compExternalScriptSrcs) {
+    if (isRelativeUrl(extSrc)) {
+      const jsPath = safePath(projectDir, extSrc);
+      const js = jsPath ? safeReadFile(jsPath) : null;
+      if (js != null) {
+        compScriptChunks.push(js);
+        continue;
+      }
+    }
     if (!document.querySelector(`script[src="${extSrc}"]`)) {
       const extScript = document.createElement("script");
       extScript.setAttribute("src", extSrc);
