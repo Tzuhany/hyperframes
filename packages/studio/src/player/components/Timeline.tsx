@@ -231,6 +231,8 @@ export const Timeline = memo(function Timeline({
   }, [draggedClip, trackOrder]);
 
   const totalH = getTimelineCanvasHeight(displayTrackOrder.length);
+  const keyframeCache = usePlayerStore((s) => s.keyframeCache);
+
   const selectedElement = useMemo(
     () => elements.find((element) => (element.key ?? element.id) === selectedElementId) ?? null,
     [elements, selectedElementId],
@@ -477,6 +479,11 @@ export const Timeline = memo(function Timeline({
           shiftClickClipRef={shiftClickClipRef}
           getPreviewElement={getPreviewElement}
           getTrackStyle={getTrackStyle}
+          keyframeCache={keyframeCache}
+          onClickKeyframe={(el, pct) => {
+            const absTime = el.start + (pct / 100) * el.duration;
+            usePlayerStore.getState().setCurrentTime(absTime);
+          }}
         />
       </div>
 

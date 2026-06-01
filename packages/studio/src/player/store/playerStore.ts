@@ -1,6 +1,18 @@
 import { create } from "zustand";
 import { readStudioUiPreferences, writeStudioUiPreferences } from "../../utils/studioUiPreferences";
 
+/** Minimal keyframe cache types — mirrors GsapKeyframesData without pulling in Node-only gsap-parser. */
+export interface KeyframeCacheEntry {
+  format: string;
+  keyframes: Array<{
+    percentage: number;
+    properties: Record<string, number | string>;
+    ease?: string;
+  }>;
+  ease?: string;
+  easeEach?: string;
+}
+
 export interface TimelineElement {
   id: string;
   label?: string;
@@ -50,6 +62,10 @@ interface PlayerState {
   inPoint: number | null;
   /** Work-area out-point (seconds). When set, loop ends here and E jumps here. */
   outPoint: number | null;
+
+  /** Keyframe data per element id, populated from parsed GSAP animations. */
+  keyframeCache: Map<string, KeyframeCacheEntry>;
+  setKeyframeCache: (elementId: string, data: KeyframeCacheEntry | undefined) => void;
 
   setIsPlaying: (playing: boolean) => void;
   setCurrentTime: (time: number) => void;
@@ -106,6 +122,15 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   manualZoomPercent: 100,
   inPoint: null,
   outPoint: null,
+
+  keyframeCache: new Map(),
+  setKeyframeCache: (elementId, data) =>
+    set((s) => {
+      const next = new Map(s.keyframeCache);
+      if (data) next.set(elementId, data);
+      else next.delete(elementId);
+      return { keyframeCache: next };
+    }),
 
   requestedSeekTime: null,
   requestSeek: (time) => set({ requestedSeekTime: time }),
@@ -169,5 +194,6 @@ export const usePlayerStore = create<PlayerState>((set) => ({
       selectedElementId: null,
       inPoint: null,
       outPoint: null,
+      keyframeCache: new Map(),
     }),
 }));

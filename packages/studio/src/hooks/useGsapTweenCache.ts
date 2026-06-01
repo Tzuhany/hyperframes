@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GsapAnimation, ParsedGsap } from "@hyperframes/core/gsap-parser";
+import { usePlayerStore } from "../player/store/playerStore";
 
 /** The selected element's identity for matching tweens to it. */
 export interface GsapElementTarget {
@@ -97,6 +98,15 @@ export function useGsapAnimationsForElement(
         : [],
     [allAnimations, targetId, targetSelector],
   );
+
+  // Populate keyframe cache when animations change
+  const elementId = target?.id ?? null;
+  useEffect(() => {
+    if (!elementId) return;
+    const { setKeyframeCache } = usePlayerStore.getState();
+    const withKeyframes = animations.find((a) => a.keyframes);
+    setKeyframeCache(elementId, withKeyframes?.keyframes ?? undefined);
+  }, [elementId, animations]);
 
   return { animations, multipleTimelines, unsupportedTimelinePattern };
 }

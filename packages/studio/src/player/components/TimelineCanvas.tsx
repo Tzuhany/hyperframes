@@ -1,5 +1,6 @@
 import { memo, type ReactNode } from "react";
 import { TimelineClip } from "./TimelineClip";
+import { TimelineClipDiamonds } from "./TimelineClipDiamonds";
 import { TimelineRuler } from "./TimelineRuler";
 import {
   getTimelineEditCapabilities,
@@ -8,9 +9,10 @@ import {
 } from "./timelineEditing";
 import { getRenderedTimelineElement, type TimelineTheme } from "./timelineTheme";
 import { GUTTER, TRACK_H, RULER_H, CLIP_Y, CLIP_HANDLE_W } from "./timelineLayout";
-import type { TimelineElement } from "../store/playerStore";
+import type { TimelineElement, KeyframeCacheEntry } from "../store/playerStore";
 import type { DraggedClipState, ResizingClipState, BlockedClipState } from "./useTimelineClipDrag";
 import type { TrackVisualStyle } from "./timelineIcons";
+import { STUDIO_KEYFRAMES_ENABLED } from "../../components/editor/manualEditingAvailability";
 
 interface TimelineCanvasProps {
   major: number[];
@@ -58,6 +60,8 @@ interface TimelineCanvasProps {
   } | null>;
   getPreviewElement: (element: TimelineElement) => TimelineElement;
   getTrackStyle: (tag: string) => TrackVisualStyle;
+  keyframeCache?: Map<string, KeyframeCacheEntry>;
+  onClickKeyframe?: (element: TimelineElement, percentage: number) => void;
 }
 
 export const TimelineCanvas = memo(function TimelineCanvas({
@@ -99,6 +103,8 @@ export const TimelineCanvas = memo(function TimelineCanvas({
   shiftClickClipRef,
   getPreviewElement,
   getTrackStyle,
+  keyframeCache,
+  onClickKeyframe,
 }: TimelineCanvasProps) {
   const draggedElement = draggedClip?.element ?? null;
   const activeDraggedElement =
@@ -328,6 +334,15 @@ export const TimelineCanvas = memo(function TimelineCanvas({
                     }}
                   >
                     {renderClipChildren(previewElement, clipStyle)}
+                    {STUDIO_KEYFRAMES_ENABLED && keyframeCache?.get(elementKey) && (
+                      <TimelineClipDiamonds
+                        keyframesData={keyframeCache.get(elementKey)!}
+                        clipWidthPx={Math.max(previewElement.duration * pps, 4)}
+                        accentColor={clipStyle.accent}
+                        isSelected={isSelected}
+                        onClickKeyframe={(pct) => onClickKeyframe?.(previewElement, pct)}
+                      />
+                    )}
                   </TimelineClip>
                 );
               })}
