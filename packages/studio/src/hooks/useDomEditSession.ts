@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { TimelineElement } from "../player";
 import {
   STUDIO_INSPECTOR_PANELS_ENABLED,
@@ -212,7 +212,6 @@ export function useDomEditSession({
   );
 
   const {
-    commitMutation: gsapCommitMutation,
     updateGsapProperty,
     updateGsapMeta,
     deleteGsapAnimation,
