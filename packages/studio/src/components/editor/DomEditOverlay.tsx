@@ -1,4 +1,5 @@
-import { memo, useMemo, useRef, type RefObject } from "react";
+import { memo, useMemo, useRef, useState, type RefObject } from "react";
+import { useMountEffect } from "../../hooks/useMountEffect";
 import { type DomEditSelection } from "./domEditing";
 import { resolveDomEditGroupOverlayRect, toOverlayRect } from "./domEditOverlayGeometry";
 import {
@@ -65,12 +66,6 @@ interface DomEditOverlayProps {
   onRotationCommit: (selection: DomEditSelection, next: { angle: number }) => Promise<void> | void;
   gridVisible?: boolean;
   gridSpacing?: number;
-  compositionScaleX?: number;
-  compositionScaleY?: number;
-  compositionLeft?: number;
-  compositionTop?: number;
-  compositionWidth?: number;
-  compositionHeight?: number;
 }
 
 export const DomEditOverlay = memo(function DomEditOverlay({
@@ -87,12 +82,6 @@ export const DomEditOverlay = memo(function DomEditOverlay({
   onBlockedMove,
   gridVisible = false,
   gridSpacing = 50,
-  compositionScaleX = 1,
-  compositionScaleY = 1,
-  compositionLeft = 0,
-  compositionTop = 0,
-  compositionWidth = 0,
-  compositionHeight = 0,
   onManualDragStart,
   onPathOffsetCommit,
   onGroupPathOffsetCommit,
@@ -153,6 +142,50 @@ export const DomEditOverlay = memo(function DomEditOverlay({
     groupSelectionsRef,
     hoverSelectionRef,
     rafPausedRef,
+  });
+
+  const [compRect, setCompRect] = useState({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+    scaleX: 1,
+    scaleY: 1,
+  });
+  useMountEffect(() => {
+    let frame = 0;
+    // fallow-ignore-next-line complexity
+    const update = () => {
+      frame = requestAnimationFrame(update);
+      const iframe = iframeRef.current;
+      const overlayEl = overlayRef.current;
+      if (!iframe || !overlayEl) return;
+      const iRect = iframe.getBoundingClientRect();
+      const oRect = overlayEl.getBoundingClientRect();
+      const left = iRect.left - oRect.left;
+      const top = iRect.top - oRect.top;
+      if (iRect.width <= 0 || iRect.height <= 0) return;
+      const doc = iframe.contentDocument;
+      const root = doc?.querySelector<HTMLElement>("[data-composition-id]") ?? doc?.documentElement;
+      const dw = Number.parseFloat(root?.getAttribute("data-width") ?? "");
+      const dh = Number.parseFloat(root?.getAttribute("data-height") ?? "");
+      const scaleX = dw > 0 ? iRect.width / dw : 1;
+      const scaleY = dh > 0 ? iRect.height / dh : 1;
+      setCompRect((prev) => {
+        if (
+          Math.abs(prev.left - left) < 0.5 &&
+          Math.abs(prev.top - top) < 0.5 &&
+          Math.abs(prev.width - iRect.width) < 0.5 &&
+          Math.abs(prev.height - iRect.height) < 0.5 &&
+          Math.abs(prev.scaleX - scaleX) < 0.001 &&
+          Math.abs(prev.scaleY - scaleY) < 0.001
+        )
+          return prev;
+        return { left, top, width: iRect.width, height: iRect.height, scaleX, scaleY };
+      });
+    };
+    frame = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(frame);
   });
 
   const gestures = createDomEditOverlayGestureHandlers({
@@ -411,17 +444,17 @@ export const DomEditOverlay = memo(function DomEditOverlay({
       <GridOverlay
         visible={gridVisible}
         spacing={gridSpacing}
-        scaleX={compositionScaleX}
-        scaleY={compositionScaleY}
-        compositionLeft={compositionLeft}
-        compositionTop={compositionTop}
-        compositionWidth={compositionWidth}
-        compositionHeight={compositionHeight}
+        scaleX={compRect.scaleX}
+        scaleY={compRect.scaleY}
+        compositionLeft={compRect.left}
+        compositionTop={compRect.top}
+        compositionWidth={compRect.width}
+        compositionHeight={compRect.height}
       />
       <SnapGuideOverlay
         snapGuidesRef={snapGuidesRef}
-        overlayWidth={compositionWidth}
-        overlayHeight={compositionHeight}
+        overlayWidth={compRect.width}
+        overlayHeight={compRect.height}
       />
     </div>
   );
