@@ -45,6 +45,29 @@ function computePercentage(selection: DomEditSelection): number {
     : 0;
 }
 
+function pickBestAnimation(
+  animations: GsapAnimation[],
+  selector: string | null,
+): GsapAnimation | undefined {
+  if (animations.length <= 1) return animations[0];
+  const currentTime = usePlayerStore.getState().currentTime;
+
+  const scored = animations.map((a) => {
+    let score = 0;
+    if (a.keyframes) score += 10;
+    // Prefer single-element selectors over comma-separated groups
+    if (selector && a.targetSelector === selector) score += 5;
+    else if (a.targetSelector.includes(",")) score -= 3;
+    // Prefer tweens active at the current time
+    const pos = typeof a.position === "number" ? a.position : 0;
+    const dur = a.duration ?? 0;
+    if (currentTime >= pos && currentTime <= pos + dur) score += 8;
+    return { anim: a, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0]?.anim;
+}
+
 function selectorFor(selection: DomEditSelection): string | null {
   if (selection.id) return `#${selection.id}`;
   if (selection.selector) return selection.selector;
@@ -72,8 +95,7 @@ export function useAnimatedPropertyCommit(deps: CommitAnimatedPropertyDeps) {
       const selector = selectorFor(selection);
       const pct = computePercentage(selection);
 
-      let anim: GsapAnimation | undefined =
-        selectedGsapAnimations.find((a) => a.keyframes) ?? selectedGsapAnimations[0];
+      let anim: GsapAnimation | undefined = pickBestAnimation(selectedGsapAnimations, selector);
 
       // Case 3: No animation — create one first
       if (!anim) {
