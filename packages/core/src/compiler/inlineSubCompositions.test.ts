@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseHTML } from "linkedom";
-import { inlineSubCompositions } from "./inlineSubCompositions";
-import { prepareFlattenedInnerRoot } from "./htmlBundler";
+import { inlineSubCompositions, prepareFlattenedInnerRoot } from "./inlineSubCompositions";
 
 // Fixtures reference GSAP CDN but are never loaded in a real browser — resolveHtml is mocked.
 
