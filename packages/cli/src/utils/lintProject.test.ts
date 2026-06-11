@@ -476,7 +476,7 @@ describe("audio_src_not_found", () => {
 });
 
 describe("missing_local_asset", () => {
-  it("errors when <img> src references a file that does not exist", () => {
+  it("errors when <img> src references a file that does not exist", async () => {
     const html = `<html><body>
   <div data-composition-id="main" data-width="1920" data-height="1080">
     <img src="capture/assets/hero.png" />
@@ -485,7 +485,7 @@ describe("missing_local_asset", () => {
 </body></html>`;
     const project = makeProject(html);
 
-    const { totalErrors, results } = lintProject(project);
+    const { totalErrors, results } = await lintProject(project);
 
     expect(totalErrors).toBeGreaterThan(0);
     const finding = results[0]?.result.findings.find((f) => f.code === "missing_local_asset");
@@ -495,7 +495,7 @@ describe("missing_local_asset", () => {
     expect(finding?.message).toContain("<img>");
   });
 
-  it("errors when <video> src references a missing file", () => {
+  it("errors when <video> src references a missing file", async () => {
     const html = `<html><body>
   <div data-composition-id="main" data-width="1920" data-height="1080">
     <video id="hero" src="capture/assets/videos/clip.mp4" muted playsinline></video>
@@ -504,7 +504,7 @@ describe("missing_local_asset", () => {
 </body></html>`;
     const project = makeProject(html);
 
-    const { totalErrors, results } = lintProject(project);
+    const { totalErrors, results } = await lintProject(project);
 
     expect(totalErrors).toBeGreaterThan(0);
     const finding = results[0]?.result.findings.find((f) => f.code === "missing_local_asset");
@@ -513,7 +513,7 @@ describe("missing_local_asset", () => {
     expect(finding?.message).toContain("<video>");
   });
 
-  it("errors when <source> src inside <video> references a missing file", () => {
+  it("errors when <source> src inside <video> references a missing file", async () => {
     const html = `<html><body>
   <div data-composition-id="main" data-width="1920" data-height="1080">
     <video muted playsinline><source src="capture/assets/videos/clip.webm" /></video>
@@ -522,7 +522,7 @@ describe("missing_local_asset", () => {
 </body></html>`;
     const project = makeProject(html);
 
-    const { totalErrors, results } = lintProject(project);
+    const { totalErrors, results } = await lintProject(project);
 
     expect(totalErrors).toBeGreaterThan(0);
     const finding = results[0]?.result.findings.find((f) => f.code === "missing_local_asset");
@@ -531,7 +531,7 @@ describe("missing_local_asset", () => {
     expect(finding?.message).toContain("<source>");
   });
 
-  it("does NOT report <audio> srcs (handled by audio_src_not_found)", () => {
+  it("does NOT report <audio> srcs (handled by audio_src_not_found)", async () => {
     const html = `<html><body>
   <div data-composition-id="main" data-width="1920" data-height="1080">
     <audio id="vo" src="missing.mp3" data-start="0" data-duration="3" data-track-index="0" data-volume="1"></audio>
@@ -540,7 +540,7 @@ describe("missing_local_asset", () => {
 </body></html>`;
     const project = makeProject(html);
 
-    const { results } = lintProject(project);
+    const { results } = await lintProject(project);
 
     const localAsset = results[0]?.result.findings.find((f) => f.code === "missing_local_asset");
     const audio = results[0]?.result.findings.find((f) => f.code === "audio_src_not_found");
@@ -548,7 +548,7 @@ describe("missing_local_asset", () => {
     expect(audio).toBeDefined();
   });
 
-  it("does NOT report remote URLs (https:, data:, blob:)", () => {
+  it("does NOT report remote URLs (https:, data:, blob:)", async () => {
     const html = `<html><body>
   <div data-composition-id="main" data-width="1920" data-height="1080">
     <img src="https://example.com/x.png" />
@@ -559,13 +559,13 @@ describe("missing_local_asset", () => {
 </body></html>`;
     const project = makeProject(html);
 
-    const { results } = lintProject(project);
+    const { results } = await lintProject(project);
 
     const finding = results[0]?.result.findings.find((f) => f.code === "missing_local_asset");
     expect(finding).toBeUndefined();
   });
 
-  it("does NOT report template placeholders (__VIDEO_SRC__)", () => {
+  it("does NOT report template placeholders (__VIDEO_SRC__)", async () => {
     const html = `<html><body>
   <div data-composition-id="main" data-width="1920" data-height="1080">
     <video src="__VIDEO_SRC__"></video>
@@ -574,13 +574,13 @@ describe("missing_local_asset", () => {
 </body></html>`;
     const project = makeProject(html);
 
-    const { results } = lintProject(project);
+    const { results } = await lintProject(project);
 
     const finding = results[0]?.result.findings.find((f) => f.code === "missing_local_asset");
     expect(finding).toBeUndefined();
   });
 
-  it("does not error when referenced files exist on disk", () => {
+  it("does not error when referenced files exist on disk", async () => {
     const html = `<html><body>
   <div data-composition-id="main" data-width="1920" data-height="1080">
     <img src="hero.png" />
@@ -592,13 +592,13 @@ describe("missing_local_asset", () => {
     writeFileSync(join(project.dir, "hero.png"), "fake");
     writeFileSync(join(project.dir, "clip.mp4"), "fake");
 
-    const { results } = lintProject(project);
+    const { results } = await lintProject(project);
 
     const finding = results[0]?.result.findings.find((f) => f.code === "missing_local_asset");
     expect(finding).toBeUndefined();
   });
 
-  it("resolves sub-composition relative paths (../assets/foo.png)", () => {
+  it("resolves sub-composition relative paths (../assets/foo.png)", async () => {
     const subComp = `<html><body>
   <div data-composition-id="scene" data-width="1920" data-height="1080">
     <img src="../assets/foo.png" />
@@ -609,13 +609,13 @@ describe("missing_local_asset", () => {
     mkdirSync(join(project.dir, "assets"), { recursive: true });
     writeFileSync(join(project.dir, "assets", "foo.png"), "fake");
 
-    const { results } = lintProject(project);
+    const { results } = await lintProject(project);
 
     const finding = results[0]?.result.findings.find((f) => f.code === "missing_local_asset");
     expect(finding).toBeUndefined();
   });
 
-  it("deduplicates the same missing src across multiple compositions", () => {
+  it("deduplicates the same missing src across multiple compositions", async () => {
     const project = makeProject(
       `<html><body>
   <div data-composition-id="main" data-width="1920" data-height="1080">
@@ -639,7 +639,7 @@ describe("missing_local_asset", () => {
       },
     );
 
-    const { results } = lintProject(project);
+    const { results } = await lintProject(project);
 
     const finding = results[0]?.result.findings.find((f) => f.code === "missing_local_asset");
     expect(finding).toBeDefined();
@@ -648,7 +648,7 @@ describe("missing_local_asset", () => {
     expect(occurrences).toBe(1);
   });
 
-  it("emits separate findings per tag type (img + video) for clear messaging", () => {
+  it("emits separate findings per tag type (img + video) for clear messaging", async () => {
     const html = `<html><body>
   <div data-composition-id="main" data-width="1920" data-height="1080">
     <img src="missing.png" />
@@ -658,7 +658,7 @@ describe("missing_local_asset", () => {
 </body></html>`;
     const project = makeProject(html);
 
-    const { results } = lintProject(project);
+    const { results } = await lintProject(project);
 
     const findings = results[0]?.result.findings.filter((f) => f.code === "missing_local_asset");
     expect(findings).toHaveLength(2);
