@@ -453,7 +453,7 @@ describe("inlineSubCompositions – #ID selector scoping divergence", () => {
     expect(childMatchesCompound).toBe(false);
   });
 
-  it("flattenInnerRoot propagates inferred data-composition-id to host when host lacks one", () => {
+  it("flattenInnerRoot skips preparation when host lacks data-composition-id, preserving outerHTML", () => {
     const subComp = `<template>
   <div data-composition-id="scoped-text" data-width="1080" data-height="1920">
     <div class="label">Scoped Text Should Stay Styled</div>
@@ -481,11 +481,17 @@ describe("inlineSubCompositions – #ID selector scoping divergence", () => {
       flattenInnerRoot: prepareFlattenedInnerRoot,
     });
 
-    expect(host.getAttribute("data-composition-id")).toBe("scoped-text");
+    // When host has no compId, flattenInnerRoot is skipped — outerHTML preserves
+    // the inner root with its original data-composition-id intact so scoped CSS
+    // matches the correct element (not an extra wrapper that breaks flex layout).
+    expect(host.getAttribute("data-composition-id")).toBeNull();
 
-    const innerRoot = host.querySelector("[data-hf-inner-root]");
+    const innerRoot = host.querySelector("[data-composition-id='scoped-text']");
     expect(innerRoot).not.toBeNull();
-    expect(innerRoot!.getAttribute("data-composition-id")).toBeNull();
+    expect(innerRoot!.querySelector(".label")).not.toBeNull();
+
+    // No data-hf-inner-root since preparation was skipped
+    expect(host.querySelector("[data-hf-inner-root]")).toBeNull();
 
     const scopedCss = result.styles.join("\n");
     expect(scopedCss).toContain('[data-composition-id="scoped-text"]');

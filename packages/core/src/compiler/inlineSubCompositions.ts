@@ -344,12 +344,11 @@ export function inlineSubCompositions(
     if (innerRoot) {
       innerRoot.setAttribute("data-composition-file", src);
       for (const child of [...innerRoot.querySelectorAll("style, script")]) child.remove();
-      if (flattenInnerRoot) {
+      if (flattenInnerRoot && compId) {
         const prepared = flattenInnerRoot(innerRoot);
         hostEl.innerHTML = prepared.outerHTML || "";
-        if (!compId && scopeCompId) {
-          hostEl.setAttribute("data-composition-id", scopeCompId);
-        }
+      } else if (flattenInnerRoot) {
+        hostEl.innerHTML = innerRoot.outerHTML || "";
       } else {
         hostEl.innerHTML = compId ? innerRoot.innerHTML || "" : innerRoot.outerHTML || "";
         // When the producer path strips the inner root (innerHTML), the
