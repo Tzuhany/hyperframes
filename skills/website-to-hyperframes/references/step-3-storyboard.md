@@ -198,7 +198,7 @@ Apple keynote register — economy of words, silence between sentences is a feat
 **Global guardrails** — read [video-composition.md](../../hyperframes/references/video-composition.md) first. It defines the medium rules: density, color presence, scale, frame composition, and how design.md is brand truth not layout spec. Then apply these capture-specific additions:
 
 - Captured assets and composed visuals are both load-bearing — the agent decides per beat which to use, and most beats correlate both. See the Asset & Brand Floor section below for the required floor (brand mark + signature visual) and the variation principle (don't repeat the same content-source pattern across beats).
-- Use different techniques from techniques.md — not across the whole video, per beat. Don't default to basic fade/scale/opacity — mix in SVG path drawing, HTML-in-canvas, shaders, scrolling effects or movement effect, CSS 3D transforms, typing effects, counter animations, canvas procedural art. Each beat should feel like its own visual world. Use as many as makes sense for the storyboard.
+- Use different techniques from techniques.md — not across the whole video, per beat. Don't default to basic fade/scale/opacity. Lead with the techniques that carry brand content directly: SVG path drawing (logo stroke-by-stroke, diagram builds), HTML-in-Canvas (iPhone/MacBook mockups with live captured screens), per-word kinetic typography, camera moves (push-in, dolly, parallax, leading-line traversal), CSS 3D transforms, variable font axis animation, character-by-character typing, counter animations, canvas procedural art for ambient backgrounds, clip-path reveal masks. Shaders are powerful but optional — most videos ship without them; use only when the beat is truly a hero "wow" moment. Each beat should feel like its own visual world. Use as many as makes sense for the storyboard.
 
 **Music direction details** (only if Step 2 Q5 said yes):
 
@@ -211,26 +211,25 @@ Apple keynote register — economy of words, silence between sentences is a feat
 
 ## Required Capabilities Discovery
 
-Before writing any beats, you have to run these commands and paste the output below the Global Direction section. This tells you what's available beyond the standard techniques.
+Before writing any beats, scan what's installed locally so you can use existing blocks rather than reinventing them. Run:
 
 ```bash
-# 1. Check available shader transitions (installed in registry/blocks/)
-ls registry/blocks/ 2>/dev/null | grep -E 'chromatic|cinematic|cross-warp|domain-warp|flash|glitch|gravitational|light-leak|ridged|ripple|sdf|swirl|thermal|whip' || echo "No shader transitions installed"
+# What's already installed in registry/blocks/ — VFX blocks (vfx-iphone-device,
+# vfx-liquid-glass, vfx-shatter, vfx-portal, etc.) and shader transitions
+# (chromatic, domain-warp, flash, glitch, ripple, swirl, thermal, etc.) live here.
+ls registry/blocks/ 2>/dev/null || echo "No blocks installed yet"
 
-# 2. Check available VFX blocks
-ls registry/blocks/ 2>/dev/null | grep vfx || echo "No VFX blocks installed"
-
-# 3. Browse what's available to install
+# Browse the full catalog of installable blocks
 npx tsx packages/cli/src/cli.ts catalog --type block 2>/dev/null | head -40
 ```
 
-There might be VFX blocks available (vfx-liquid-glass, vfx-iphone-device, vfx-shatter, vfx-portal, etc.), use them for hero treatments instead of basic perspective tilt. You need to install any you want with `npx tsx packages/cli/src/cli.ts add <name>`. Don't use too many shaders — maximum 2 per video unless user wants differently.
+If you need a VFX block (e.g. for an iPhone/MacBook mockup hero, a liquid-glass refraction, a portal reveal) install it with `npx tsx packages/cli/src/cli.ts add <name>` — these are powerful for specific hero treatments. Don't over-install: only add blocks you'll actually use in a specific beat. Most videos ship without any registry-installed blocks at all; the core techniques (SVG path drawing, kinetic typography, CSS 3D, canvas procedural art, camera moves, captured-asset use) carry the majority of beats.
 
-**Shader transitions — block name ≠ shader name.** When you run the commands above and see `domain-warp-dissolve` in `registry/blocks/`, the HyperShader runtime name is `domain-warp` (without "-dissolve"). After installing a block, open its showcase HTML (`compositions/<block-name>.html`) and find the actual shader name used in `HyperShader.init()`. That is what you put in the storyboard. Then delete the showcase file — it's a demo only and will pollute your compositions/ directory with lint warnings.
+**Shader transitions are optional and rare.** Most videos ship without any shader transitions — CSS crossfades and hard cuts (both free, deterministic, GPU-cheap) cover 90%+ of inter-beat transitions cleanly. Reach for a shader transition only when a beat boundary is a true "wow" moment that earns the production-value bump. When you do use one, the available shader names from `registry/blocks/` follow a naming pattern: the block name (`domain-warp-dissolve`) differs from the runtime shader name (`domain-warp`, no `-dissolve` suffix). After installing a block, open its showcase HTML to find the actual shader name used in `HyperShader.init()`, then delete the showcase file (demo-only, pollutes `compositions/` with lint warnings).
 
-#### Canonical declaration format (auto-derived by `w2h-prep`)
+#### Canonical declaration format (auto-derived by `w2h-prep` — only if you actually use shader transitions)
 
-If the video uses shader transitions, declare them in a dedicated section of STORYBOARD.md so `w2h-prep` can emit them in `group_spec.json` automatically — no orchestrator hand-edit needed. Use this exact bullet format (case-insensitive on the shader name; `duration` is optional, defaults to `0.5`):
+If — and only if — the video genuinely needs one or two shader transitions, declare them in a dedicated section of STORYBOARD.md so `w2h-prep` can emit them in `group_spec.json` automatically. **Most videos skip this section entirely.** Use this exact bullet format (case-insensitive on the shader name; `duration` is optional, defaults to `0.5`):
 
 ```markdown
 ## Shader Transitions
@@ -360,12 +359,13 @@ Each beat is a WORLD, not a layout. Write what the viewer EXPERIENCES before you
 - **Organic:** FLOATS, DRIFTS, BREATHES, PULSES, ORBITS
 - **Mechanical:** TYPES ON, CLICKS, LOCKS IN, SNAPS, STEPS
 
-**Transition decision matrix** — shader vs CSS vs hard cut:
-| Shader transition for | CSS crossfade for | Hard cut for |
-|---|---|---|
-| Hero reveals, logo unveils, "wow" moments | Continuous motion between beats, editorial pacing | Rapid-fire lists, percussive edits, comedy timing |
+**Transition decision matrix** — pick per beat-boundary:
 
-1–2 shader transitions per video (hero + CTA). Too many flatten their impact. Mix shader and CSS crossfade in one HyperShader composition by omitting `shader` on any transition entry.
+| CSS crossfade (the default) | Hard cut | Shader transition (rare — opt-in only) |
+|---|---|---|
+| Continuous motion between beats, editorial pacing. Cheap, GPU-light, deterministic. | Rapid-fire lists, percussive edits, comedy timing. Free, instant. | Hero reveals, logo unveils, "wow" moments. Max 1-2 per video; **zero is fine and common**. More than 2 flattens their impact + raises GPU init risk. |
+
+Most videos use only CSS crossfades + hard cuts and ship beautifully. Reach for a shader transition only when a specific beat boundary EARNS the production-value bump (hero reveal at beat-1, CTA punch at the closer). If a video has no obvious "wow" boundary, skip shaders entirely. Mix shader and CSS crossfade in one HyperShader composition by omitting `shader` on any transition entry in the storyboard's `## Shader Transitions` block.
 
 **Rhythm** — declare your scene rhythm before implementing: fast-fast-SLOW-fast-SHADER-hold. The rhythm comes from the brand and content, not a template.
 
@@ -379,7 +379,7 @@ Use the pacing you decided at the top of this step. The beat count, duration, an
 
 **Asset use isn't spamming when the concept needs it.** A 46-SVG grid of partner-company logos is one beat's primary content, not spam. Two captured assets layered in a beat (logo + hero photo) is normal. Multiple icons composed into a feature grid using the brand's real captured SVGs is normal. The spam rule applies to assets that DON'T serve any beat's meaning — those don't appear. The "use it / compose it / combine both" decision is per-beat judgment; trust the agent to read the beat's concept and pick what makes that beat awesome.
 
-**Opener default: fast intro to stop the scrollers.** Even a cinematic video should start with a punch — a flash, a shader bloom, a logo strike, a kinetic word build, a particle burst — anything that lands inside the first 1.0–1.5 seconds. Slow intros work for prestige trailers; videos shipping anywhere social or feed-based need a hook that beats the 1.5-second scroll threshold. Plan the opener as the most ambitious beat in the storyboard, not the gentlest one.
+**Opener default: fast intro to stop the scrollers.** Even a cinematic video should start with a punch — a logo strike, a kinetic word build, a particle burst, a captured hero illustration push-in, a 3D-rotating product photo, a typed-on terminal line, an SVG path drawing itself — anything that lands inside the first 1.0–1.5 seconds. (Shader bloom is also valid here but optional; the non-shader openers above are equally punchy and cheaper.) Slow intros work for prestige trailers; videos shipping anywhere social or feed-based need a hook that beats the 1.5-second scroll threshold. Plan the opener as the most ambitious beat in the storyboard, not the gentlest one.
 
 **Named hook patterns** — pick one and write it into the opener beat's concept. Each is a known scroll-stopper; the choice depends on the brand and the message:
 
