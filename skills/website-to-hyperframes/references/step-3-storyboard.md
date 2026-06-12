@@ -109,6 +109,8 @@ This writes the track to `assets/music/<id>.<ext>` AND prints the analysis — L
 
 In Step 5, the music is already on disk — beat workers read `**Music file:**` from STORYBOARD.md Global Direction and the orchestrator embeds it as the BGM lane (track 11) without re-fetching.
 
+**When music drives (Step 2 said yes music + no VO — visual-only / brand-reel mode):** the music IS the structural spine of the video. The sparkline maps to beat structure directly: `▁` blocks → beats start or breathe; `▂▅` → builds where motion accelerates; `█` peaks → anchor reveals / hero moments / brand-mark landings; `▇▃` → cool-downs hold the final frame. The music's duration IS the video duration (trim its tail in the storyboard's audio embed if your beats end sooner; extend or repeat the file in Step 5 if your beats run longer than the track). VO start timing doesn't apply. Beat timing comes from the sparkline, not from a script.
+
 ---
 
 ## Technique-pick checklist (REQUIRED, do this BEFORE writing beat copy)
@@ -139,7 +141,7 @@ Beat 3: composed kanban (4 cards-as-divs per column) + counter chip on In-Progre
   
   **For each beat you write below, before assigning an asset to it: open the relevant contact-sheet page(s) and visually pick the cell.** Do not assign assets from memory — your Step 0 viewing was thorough but specific beat decisions need specific lookup. **Do not skim the sheets** — past agents have reported "viewed the contact sheets" after one scroll and later placed a beat against an asset whose actual content didn't match what they thought it was. Open the cell, name what you see, then decide.
   
-  When the contact-sheet thumbnail is too small to judge fine detail (e.g. a partner-logo set where you need to confirm which company is which), **open the individual file** for the specific candidate. Also read `capture/extracted/asset-descriptions.md` for one-line Gemini captions of each asset — captions are usually correct after the SVG-rasterize fix but the contact sheet remains authoritative when in doubt.
+  When the contact-sheet thumbnail is too small to judge fine detail (e.g. a partner-logo set where you need to confirm which company is which), **open the individual file** for the specific candidate. Also read `capture/extracted/asset-descriptions.md` for one-line Gemini captions of each asset — captions are usually correct after the SVG-rasterize fix but the contact sheet remains authoritative when in doubt. **Empty Gemini caption ≠ broken asset:** sharp can fail to rasterize exotic SVGs (external web fonts, `<foreignObject>`, complex filters) that Chrome still renders fine at video time. If a caption is empty for an SVG, view the contact-sheet thumbnail (rendered by Chrome, never hallucinated) or open the SVG file directly to assess — don't skip the asset just because its caption is empty.
   
   **The decision of whether a beat uses the captured asset, a composed visual built from divs/CSS/SVG/Canvas, or both layered is made per beat based on what serves THAT beat's meaning** (see Per-Beat Direction below).
   

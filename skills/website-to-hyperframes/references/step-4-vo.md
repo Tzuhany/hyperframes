@@ -18,6 +18,8 @@ If they haven't set up a key for the paid provider, ask for it inline ("paste it
 
 **Generate the full narration directly** — no audition pass, no test clip. If the result sounds wrong, regenerate with a different voice. Picking voices in advance burns turns; one full take is faster than three auditions.
 
+**Agent picks the voice ID from the brief, not from a user question.** Match the storyboard's `**VO direction:**` line (e.g., "mid-age male, calm confident delivery, Apple keynote register") to the provider's voice catalog (`/v3/voices` for HeyGen; ElevenLabs' library; Kokoro's bundled voices). Don't ask the user to pick a voice ID — the brief already locked the register. If the agent's first pick sounds wrong on full take, swap voice IDs and regenerate; iterate, don't audition.
+
 **HeyGen v3 (preferred when key is available — returns word timestamps in the same call):**
 
 ```bash
@@ -146,5 +148,7 @@ node skills/website-to-hyperframes/scripts/captions.mjs html \
 ```
 
 The first command emits per-word groups (silence-gap + sentence-end + density-modulated cap rules). The second installs the chosen registry skin (`caption-pill-karaoke` for warm/neutral tone, `caption-highlight` for direct/loud — ties resolve to pill-karaoke), patches it with `tokens.css` and pre-computed groups, and writes `compositions/captions.html`. The main agent's `index.html` assembler mounts the file as track 12 if it exists; if either script skipped (no words, no tokens), no captions composition is produced and no track is mounted — clean no-op.
+
+**Agent can override the auto-pick.** Skin auto-pick scores against `inference.json` voice_tone (which the agent shapes via DESIGN.md in Step 1) — usually correct. But if the storyboard's tonal direction is explicitly loud / social / TikTok-style, force the highlight skin by appending `--skin caption-highlight` to the html command above. For neutral / SaaS / friendly tones, the default pill-karaoke is what auto-pick will choose anyway. Two skins are production-supported: `caption-pill-karaoke` (default, opaque pill, lower-third) and `caption-highlight` (per-word background sweep). Other names that may appear (`caption-neon-accent`, `caption-emoji-pop`) are NOT yet supported and the script will fail to a clean message — don't pass them.
 
 If no captions, skip both commands entirely. No artifact, no track.
