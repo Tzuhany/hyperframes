@@ -431,7 +431,19 @@ Use the pacing you decided at the top of this step. The beat count, duration, an
 
 Pick one — every entry above is a known scroll-stopper, none is "better" than another. The right choice is whichever fits the brand voice, the platform, and the message at hand. **Don't combine more than one hook per opener** — stacking fragments the cold-open and loses the scroll.
 
-**CTA / closing beats** are consistently the weakest. Agents treat them as "logo + tagline + done." A good CTA should: make the logo entrance an event (SVG path draw, scale with overshoot, or anything awesome really), have continuous background motion, and hold only 2-3 seconds after the last spoken word — NOT 8-10 seconds of silence.
+**Alive, not active — readable elements on screen should never be visually frozen.** This is the line between "presence" and "activity," and it's NOT a "make everything move more" rule. The fail mode it addresses (real, observed): a beat that enters its labels, then holds them stationary for 2 seconds while the agent assumes an opacity-only "breath" carries weight. Opacity breath is invisible at video scale; the labels read as a paused slide.
+
+The fix is one (not all) of these continuous-motion patterns per readable element, calibrated to be _felt_ but not _watched_:
+
+- **Drift** — ±4–8px translate loop on the element (sine.inOut, 4–7s period). The viewer never points at it.
+- **Camera dolly** — scale 1.0 → 1.04 on the scene root over the beat's duration. The whole frame breathes.
+- **Wobble** — ±1.5–3° rotation, sine.inOut, on a single element. Reads as physical presence.
+- **Parallax** — foreground / midground / background elements drift at different speeds. The depth carries the life.
+- **Deliberate stillness AS THE CONCEPT** — the Negative space hook above (1.2s of intentional empty followed by reveal) is valid because the stillness is doing the work. _Unintentional_ stillness during a hold-to-let-the-viewer-read is the failure mode.
+
+**One pattern per element. Don't stack.** The goal is the frame feeling alive, not multiple things competing for attention. When you write the storyboard, name the motion carrying each element through its beat. The buggy form is "Beat 1: app names appear, then hold." The working form is "Beat 1: app names enter staggered → each drifts ±5px on independent 4–7s loops while the scene root pushes 1.0 → 1.04 → the beam ignites at 3.0s and yanks them inward."
+
+**CTA / closing beats** are consistently the weakest. Agents treat them as "logo + tagline + done." A good CTA should: make the logo entrance an event (SVG path draw, scale with overshoot, or anything awesome really), have continuous background motion (the alive-not-active rule applies here too — the logo sitting still after entry is the most common variant of the failure), and hold only 2–3 seconds after the last spoken word — NOT 8–10 seconds of silence.
 
 **VO start timing — decide here, not in Step 5.** When does the narration actually begin relative to the first visual? Options: (a) VO starts over the visual intro (heard before content settles — creates urgency), (b) VO starts after the visual intro settles (viewer sees the opening, then hears the voice — creates drama), (c) a few seconds of music-only visual before VO enters. None of these is a default — pick based on the brand and the opening beat's concept. State the intended narration start time explicitly in the storyboard's Global Direction, e.g. `**Narration start:** 0.8s (after hero intro settles)`. Step 5 wires this as the audio element's `data-start`.
 

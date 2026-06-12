@@ -241,6 +241,23 @@ The linter and check-compositions scan with regex; a `<template>` or `<style>` o
 
 w2h does CSS crossfades between sub-comp beats at the orchestrator level (`assemble-index.mjs` wires them via `shader_transitions`). **Don't author per-beat exit animations** — hold the final frame steady, let the next beat's entrance carry the cut. Exit tweens inside a beat double-blend with the orchestrator's crossfade and produce the "scene dipping then re-entering" visual artifact. Exception: the closing beat (no `next_beat_handoff` in your dispatch packet) MAY fade out for the CTA-to-end transition.
 
+### 8. Alive, not active — no frozen readable text
+
+Every readable element (label, wordmark, value, headline) on screen must have visible-at-video-scale motion carrying it from entrance to exit. The failure mode this rule names — observed in a recent huly opener — is: agent enters a label, then holds it for ~2s with an `opacity 0.85 → 1.0` "breath" thinking that keeps it alive. At 1920×1080 a 15% opacity oscillation is invisible; the label reads as completely frozen.
+
+The fix is NOT "make it move more" (don't speed up entrances, don't add bouncing). The fix is to assign ONE continuous-motion pattern per readable element, calibrated to be _felt_ but not _watched_:
+
+- **Drift** — translate ±4–8px on a 4–7s sine.inOut loop. Independent loops per element create natural parallax.
+- **Camera dolly** — scale 1.0 → 1.04+ on the scene root over the beat duration. The whole frame breathes; individual elements can stay still relative to the frame.
+- **Rotation wobble** — ±1.5–3° sine.inOut. Reads as physical presence.
+- **Parallax** — foreground / midground / background layers drift at different speeds.
+
+**One pattern per element. Don't stack.** Goal: the frame feels alive; the viewer can't point at "the motion" if asked.
+
+This rule applies to elements that have ENTERED the scene. Stillness IS valid when it's the concept (the storyboard's Negative space hook: 1.2s of intentional empty followed by reveal — the stillness is doing the work). Stillness during a hold-to-let-the-viewer-read is NOT valid — that's the failure mode.
+
+Check yourself: for every element that's on screen for more than 1 second, can you point at the GSAP tween carrying it (not its entrance — its on-screen lifetime)? If no, add one of the four patterns above.
+
 ---
 
 ## Layout annotations — opt-in markers for the perception gate
@@ -312,7 +329,7 @@ These are defaults to avoid, **not absolute prohibitions.** If the storyboard ge
 - ⚠ **macOS / browser window chrome reproduced in CSS** — traffic-light dots, URL bars, browser tabs. Fine when the storyboard makes the chrome the subject (e.g. "stylized macOS window framing the product UI" for a closer). NOT fine when it's a frame you added around a card "to make it look like an app."
 - ⚠ **Full webpage layout** (sidebar + header + footer + main content area) — fine when the beat is genuinely a product tour shot. NOT fine when the beat was supposed to be about _the kanban moment_ and you defaulted to drawing the whole app around it.
 - ❌ **Parked-camera composition** — centered card with 60–120px margins on all sides and no camera move. Almost always wrong. Either give it a real push-in / dolly / parallax, or reframe.
-- ❌ **"Hold with breathing"** implemented as `y: ±1–2px` or `scale: 1.01` — invisible at 1920×1080+ scale. If continuous motion is required, use camera dolly (scale 1.0 → 1.05), parallax pan (x/y ±30–80px), or progressive reveals.
+- ❌ **"Hold with breathing"** implemented as `y: ±1–2px`, `scale: 1.01`, or `opacity: 0.85 → 1.0` loops — invisible at 1920×1080+ scale. The opacity-breath variant is the most common: an agent enters a label, then schedules `tl.to(label, { opacity: 1 }, "+=2")` and assumes that "keeps it alive." It doesn't — at video scale a 15% opacity oscillation reads as static. If you want a readable element to feel alive across its on-screen lifetime, use one (not all) of: camera dolly (scale 1.0 → 1.04+ on the scene root), drift (translate ±4–8px on a 4–7s sine.inOut loop), rotation wobble (±1.5–3°), or parallax with another layer. See the **Alive, not active** rule in the storyboard ([step-3-storyboard.md](step-3-storyboard.md)) — that's where the orchestrator names which one carries each element.
 - ❌ **Hover-state simulations** — videos have no hover. If the brand uses hover effects, show the BEFORE and AFTER as discrete frames in the timeline.
 - ❌ **Counter pulses + dot pulses + tiny scale wobbles** as the only motion during the hold — these are "I ran out of ideas" filler.
 
