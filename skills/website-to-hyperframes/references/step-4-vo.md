@@ -1,6 +1,6 @@
 # Step 4: VO + Timing
 
-Music is deferred — see [Music](#music-deferred) at the bottom. Captions are automated downstream via `scripts/captions.mjs` (zero LLM calls; runs between Step 5 and Step 6). This step focuses on: generate narration, transcribe, map word timestamps to beats, hand off timings to Step 5.
+Music was decided in Step 2 (Q5) and fetched in Step 3's Music Fetch sub-step — already on disk by the time you reach Step 4 (see the [Music section](#music) below; this step only optionally aligns VO start to the track's intro). Captions are automated downstream via `scripts/captions.mjs` (zero LLM calls; runs between Step 5 and Step 6). This step focuses on: generate narration, transcribe, map word timestamps to beats, hand off timings to Step 5.
 
 ## If Step 2 said "no narration"
 

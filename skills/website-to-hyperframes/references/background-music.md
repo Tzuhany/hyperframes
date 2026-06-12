@@ -90,10 +90,10 @@ If a video should have music, the storyboard's Global Direction names it explici
 **Music direction:** Moody ambient pad with a slow build. Already playing when the video starts. Sits at ~0.45 under VO; lifts to ~0.75 in the 2s pre-CTA stretch where there's no narration.
 ```
 
-Without that line, no music is added in Step 5. Silent absence is a deliberate choice, not a forgotten feature.
+Without that line, no music is fetched in Step 3 and no BGM lane is added in Step 5. Silent absence is a deliberate choice, not a forgotten feature.
 
 ## Access
 
-Music comes from the same free HeyGen catalog as SFX — needs a HeyGen API key (`HEYGEN_API_KEY` or `hyperframes auth login`). If the key isn't set when Step 5 runs `hyperframes music`, ask the user for one — never silently drop the music bed the storyboard called for.
+Music comes from the same free HeyGen catalog as SFX — needs a HeyGen API key (`HEYGEN_API_KEY` or `hyperframes auth login`). If the key isn't set when Step 3 runs `hyperframes music`, ask the user for one — never silently drop the music bed the storyboard called for.
 
 See [`../../hyperframes/references/sound-effects.md`](../../hyperframes/references/sound-effects.md) for the audio contract (`data-start`/`data-duration`/`data-volume`/`data-media-start`) and the reading-the-analysis recipe — music and SFX share the same wire.
