@@ -192,12 +192,14 @@ function parseShaderTransitions(projectDir, scenes, bgColor, accentColor) {
   if (!existsSync(storyPath)) return null;
   const text = readFileSync(storyPath, "utf-8");
 
-  const declared = new Map(); // `${from}::${to}` → { shader, duration }
+  const declared = new Map(); // `${from}::${to}` → { shader, duration, from, to }
   let m;
   while ((m = SHADER_TRANSITION_RE.exec(text)) !== null) {
     declared.set(`${m[1]}::${m[2]}`, {
       shader: m[3],
       duration: m[4] ? parseFloat(m[4]) : 0.5,
+      from: m[1],
+      to: m[2],
     });
   }
   if (declared.size === 0) return null;
@@ -205,17 +207,48 @@ function parseShaderTransitions(projectDir, scenes, bgColor, accentColor) {
   // Build the full transitions chain over scenes[N-1] → scenes[N] pairs.
   // Declared boundaries get the named shader; undeclared get a CSS crossfade.
   const sceneIds = scenes.map((s) => s.id);
+  const sceneIdSet = new Set(sceneIds);
+  const matchedKeys = new Set();
   const transitions = [];
   for (let i = 0; i < scenes.length - 1; i++) {
     const fromId = scenes[i].id;
     const toId = scenes[i + 1].id;
-    const decl = declared.get(`${fromId}::${toId}`);
+    const key = `${fromId}::${toId}`;
+    const decl = declared.get(key);
+    if (decl) matchedKeys.add(key);
     const time = Number((scenes[i].start_s + scenes[i].duration_s).toFixed(3));
     transitions.push({
       time,
       duration: decl?.duration ?? 0.5,
       ...(decl?.shader ? { shader: decl.shader } : {}),
     });
+  }
+
+  // Warn LOUDLY about declared transitions whose from/to didn't match an
+  // actual beat boundary. Real-AI-test heygen-showcase run wrote
+  // `between beat-4-proof and beat-5-close` in STORYBOARD's Shader
+  // Transitions block, but the actual files were beat-4-scale and
+  // beat-5-superpower — parser silently dropped all 4 declarations and the
+  // build shipped with vanilla CSS crossfades. The user only noticed because
+  // the prep summary line read "(0/4 named shader transitions)" — buried at
+  // the end of a long log. Surface bad declarations EXPLICITLY so the
+  // orchestrator can see and fix the storyboard.
+  for (const [key, decl] of declared) {
+    if (matchedKeys.has(key)) continue;
+    const issues = [];
+    if (!sceneIdSet.has(decl.from)) issues.push(`from-id "${decl.from}" is not a beat in this project`);
+    if (!sceneIdSet.has(decl.to)) issues.push(`to-id "${decl.to}" is not a beat in this project`);
+    // Both IDs exist but not adjacent (transitions only apply between consecutive beats).
+    if (sceneIdSet.has(decl.from) && sceneIdSet.has(decl.to) && issues.length === 0) {
+      const fromIdx = sceneIds.indexOf(decl.from);
+      const toIdx = sceneIds.indexOf(decl.to);
+      issues.push(`${decl.from} and ${decl.to} exist but are not adjacent (index ${fromIdx} → ${toIdx}; transitions only apply between consecutive beats)`);
+    }
+    console.warn(
+      `! shader transition "between ${decl.from} and ${decl.to}: shader=${decl.shader}" in STORYBOARD.md was DROPPED — ${issues.join("; ")}.\n` +
+        `  Available beat IDs (in order): ${sceneIds.join(", ")}\n` +
+        `  → Fix the STORYBOARD.md "## Shader Transitions" block to use real beat IDs, or remove this line if the transition isn't needed.`,
+    );
   }
 
   const result = { bg_color: bgColor, scenes: sceneIds, transitions };
