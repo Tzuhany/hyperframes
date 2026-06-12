@@ -160,7 +160,27 @@ export async function downloadAssets(
         // human-readable slug — they were not affected by the bug.
         let slug: string;
         if (ext === ".svg") {
-          const isLogo = !!catalog?.contexts?.some((c) => /logo|brand|wordmark/i.test(c));
+          // isLogo signals — broadened. The original `contexts` substring
+          // check never fired in practice because contexts hold HTML
+          // positions like 'img[src]' / 'video[poster]', not semantic
+          // labels. Real signals come from DOM structure + alt/aria text:
+          // 1. The cataloger now flags inBanner (inside <header>/<nav>/
+          //    [role=banner]), inHomeLink (inside <a href="/">), and
+          //    matchesTitleBrand (alt/aria matches document.title's
+          //    brand segment) — see assetCataloger.ts getElementContext.
+          // 2. As a backstop, also check description / nearestHeading /
+          //    sectionClasses for "logo" / "brand" / "wordmark" text.
+          const c = catalog;
+          const brandRe = /logo|brand|wordmark/i;
+          const isLogo = !!(
+            c?.inBanner ||
+            c?.inHomeLink ||
+            c?.matchesTitleBrand ||
+            c?.contexts?.some((s) => brandRe.test(s)) ||
+            (c?.description && brandRe.test(c.description)) ||
+            (c?.nearestHeading && brandRe.test(c.nearestHeading)) ||
+            (c?.sectionClasses && brandRe.test(c.sectionClasses))
+          );
           slug = svgContentHashSlug(buffer, isLogo);
         } else {
           slug = deriveAssetName(parsedUrl, catalog, isPoster, imgIdx, usedNames);
