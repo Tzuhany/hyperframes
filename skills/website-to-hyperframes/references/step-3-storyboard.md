@@ -408,6 +408,18 @@ Use the pacing you decided at the top of this step. The beat count, duration, an
 
 **Asset use isn't spamming when the concept needs it.** A 46-SVG grid of partner-company logos is one beat's primary content, not spam. Two captured assets layered in a beat (logo + hero photo) is normal. Multiple icons composed into a feature grid using the brand's real captured SVGs is normal. The spam rule applies to assets that DON'T serve any beat's meaning — those don't appear. The "use it / compose it / combine both" decision is per-beat judgment; trust the agent to read the beat's concept and pick what makes that beat awesome.
 
+**Captured videos are first-class beats — but the mp4 must be FETCHED.** `capture/extracted/video-manifest.json` lists every `<video>` element on the source page (URL, dimensions, heading, caption, preview PNG), but the actual mp4 files are NOT downloaded during capture (sites with 15+ feature videos would blow up the capture). When a beat needs a real captured video — heygen.com's 3D Orb hero, a product demo loop, a hero motion clip the brand designed and no CSS recreation will match — name the manifest entry in the beat spec AND note the fetch command:
+
+```markdown
+**Visual content:** Captured Orb hero video (video-manifest entry [0]:
+  HEYGEN_Orb_home_ios.mp4, 768×768, "Turn your ideas into videos in
+  minutes"). Fetch with: `npx tsx packages/cli/src/cli.ts capture-video . --index 0`.
+  Lands at capture/assets/videos/HEYGEN_Orb_home_ios.mp4. Reference from
+  the beat as <video src="capture/assets/videos/HEYGEN_Orb_home_ios.mp4">.
+```
+
+The fetch is one command per video. **You only fetch what a beat actually uses.** Approximating a real 3D hero animation with CSS-3D shapes is a brand-fidelity miss (the heygen agent acknowledged exactly this: "the genuine article was in the capture and I had a worker approximate it from divs instead"). Captured videos render deterministically in HyperFrames — `<video>` elements honor `data-start` / `data-duration` like any other clip, the engine seeks them frame-accurately.
+
 **Opener default: fast intro to stop the scrollers.** Even a cinematic video should start with a punch — anything that lands inside the first 1.0–1.5 seconds. Many options work equally well; pick what the brand calls for: a logo strike, a kinetic word build, a particle burst, a captured hero illustration push-in, a 3D-rotating product photo, a typed-on terminal line, an SVG path drawing itself, a shader bloom, a flash, a captured video clip cold-opening. Slow intros work for prestige trailers; videos shipping anywhere social or feed-based need a hook that beats the 1.5-second scroll threshold. Plan the opener as the most ambitious beat in the storyboard, not the gentlest one.
 
 **Named hook patterns** — pick one and write it into the opener beat's concept. Each is a known scroll-stopper; the choice depends on the brand and the message:

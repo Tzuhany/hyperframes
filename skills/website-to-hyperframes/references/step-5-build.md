@@ -189,6 +189,19 @@ The `sfx` command flow has four real friction points lived agents have hit:
 
 **Before dispatching, re-read DESIGN.md and STORYBOARD.md.** You wrote these files earlier in the session and you think you remember them. You don't — not the exact hex values, not the specific font families, not the button border-radius, not the Do's/Don'ts. Re-read them now so you can paste accurate brand rules and beat specs into each sub-agent prompt.
 
+**Pre-fetch captured videos.** If any beat in the storyboard references a `<video>` from `capture/extracted/video-manifest.json`, the mp4 file is NOT on disk yet — the capture step only writes the manifest + preview PNGs. For each video the storyboard uses, run the fetch ONCE before dispatching workers:
+
+```bash
+# List the manifest first to confirm indices:
+npx tsx packages/cli/src/cli.ts capture-video . --list
+
+# Fetch each referenced video (the heygen Orb hero, a product loop, etc.):
+npx tsx packages/cli/src/cli.ts capture-video . --index 0   # → capture/assets/videos/HEYGEN_Orb_home_ios.mp4
+npx tsx packages/cli/src/cli.ts capture-video . --index 3   # → capture/assets/videos/<next-needed-video>.mp4
+```
+
+The command is idempotent (skips if already downloaded). Skip videos the storyboard doesn't reference — most marketing sites have 15+ videos and you only need the ones a beat actually uses. The dispatch packet should reference the local path (`capture/assets/videos/<filename>.mp4`), not the manifest URL — workers don't have network to fetch at write time.
+
 ### Build the dispatch packet ONCE before fan-out
 
 Workers do a single Read of a pre-built packet at Step 0 instead of pulling DESIGN.md + STORYBOARD.md + SCRIPT.md + transcript.json + brand values separately (saves 3-4 Reads × N workers). Run this once from `$PROJECT_DIR` before dispatching:
