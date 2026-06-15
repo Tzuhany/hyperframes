@@ -194,6 +194,7 @@ export function useDomEditSession({
     onFileContentChanged: updateEditingFileContent,
     showToast,
     sdkSession,
+    writeProjectFile,
   });
 
   // ── DOM commit handlers ──

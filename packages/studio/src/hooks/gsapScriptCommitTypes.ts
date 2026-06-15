@@ -59,6 +59,7 @@ export interface GsapScriptCommitsParams {
   onCacheInvalidate: () => void;
   onFileContentChanged?: (path: string, content: string) => void;
   showToast: (message: string, tone?: "error" | "info") => void;
-  /** Stage 7 Step 3b: SDK session for shadow GSAP dispatch (server stays authoritative). */
+  /** Stage 7 §3.5: SDK session for routing GSAP tween ops through addGsapTween/setGsapTween/removeGsapTween. */
   sdkSession?: Composition | null;
+  writeProjectFile?: (path: string, content: string) => Promise<void>;
 }
