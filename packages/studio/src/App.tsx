@@ -269,7 +269,6 @@ export function StudioApp() {
     () => leftSidebarRef.current?.getTab() ?? "compositions",
     [],
   );
-  const sdkSession = useSdkSession(projectId, activeCompPath);
   const domEditSession = useDomEditSession({
     projectId,
     activeCompPath,
