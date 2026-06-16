@@ -88,7 +88,7 @@ export function findRoot(document: Document): Element | null {
 
 // ─── Inline style helpers ─────────────────────────────────────────────────────
 
-function toCamel(prop: string): string {
+export function toCamel(prop: string): string {
   if (prop.startsWith("--")) return prop;
   return prop.replace(/-([a-z])/g, (_, c: string) => (c as string).toUpperCase());
 }
@@ -127,10 +127,13 @@ export function getElementStyles(el: Element): Record<string, string> {
 export function setElementStyles(el: Element, updates: Record<string, string | null>): void {
   const current = getElementStyles(el);
   for (const [prop, value] of Object.entries(updates)) {
+    // Stored map is keyed camelCase (parseStyleAttr); custom props (--foo) stay
+    // verbatim. Normalize the incoming key the same way for both set and delete.
+    const key = toCamel(prop);
     if (value === null) {
-      delete current[prop];
+      delete current[key];
     } else {
-      current[prop] = value;
+      current[key] = value;
     }
   }
   const serialized = serializeStyleAttr(current);

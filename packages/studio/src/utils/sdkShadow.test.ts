@@ -181,32 +181,26 @@ describe("sdkShadowDispatch (integration)", () => {
 
   // Fix 3 verdict (REAL DIVERGENCE, not a readback artifact): the inline-style
   // read-back already reads only the AUTHORED style attribute (getElementStyles →
-  // parseStyleAttr), never computed styles. The transform-origin event
-  // (expected null actual "center center") is a genuine SDK bug: setStyle removal
-  // of a HYPHENATED property silently no-ops because setElementStyles deletes the
-  // kebab key while the style map is keyed camelCase. The shadow CORRECTLY flags
-  // it; the fix belongs in the SDK (packages/sdk/src/engine/model.ts), not here.
-  it("CORRECTLY flags the SDK transform-origin removal no-op (real divergence)", async () => {
+  // parseStyleAttr), never computed styles. The transform-origin divergence
+  // (expected null actual "center center") was a genuine SDK bug — setStyle
+  // removal of a HYPHENATED property silently no-opped because setElementStyles
+  // deleted the kebab key while the style map is keyed camelCase. Now FIXED in
+  // the SDK (model.ts setElementStyles normalizes the key via toCamel), so the
+  // shadow sees parity: removal applies and there is no mismatch.
+  it("reports clean removal of a hyphenated style (SDK setStyle kebab/camel fix)", async () => {
     const { sdkShadowDispatch } = await import("./sdkShadow");
     const TO_HTML = /* html */ `<!DOCTYPE html>
 <html><body><div data-hf-id="hf-box" style="transform-origin: center center">x</div></body></html>`;
     const session = await openComposition(TO_HTML);
 
-    // op intends to REMOVE transform-origin (value null) ...
     const ops: PatchOperation[] = [
       { type: "inline-style", property: "transform-origin", value: null },
     ];
     const result = sdkShadowDispatch(session, "hf-box", ops);
 
-    // ... but the SDK still has it → genuine value_mismatch, not suppressed.
+    // The SDK now removes the hyphenated property, so the shadow read-back agrees.
     expect(result.dispatched).toBe(true);
-    expect(result.mismatches).toHaveLength(1);
-    expect(result.mismatches[0]).toMatchObject({
-      kind: "value_mismatch",
-      property: "transform-origin",
-      expected: null,
-      actual: "center center",
-    });
+    expect(result.mismatches).toHaveLength(0);
   });
 
   it("applies attribute op and reads back via session.getElement", async () => {
