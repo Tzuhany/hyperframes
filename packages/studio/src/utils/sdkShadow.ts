@@ -9,7 +9,7 @@
  */
 
 import type { Composition } from "@hyperframes/sdk";
-import type { EditOp } from "@hyperframes/sdk";
+import type { EditOp, GsapTweenSpec } from "@hyperframes/sdk";
 import { STUDIO_SDK_SHADOW_ENABLED } from "../components/editor/manualEditingAvailability";
 import { trackStudioEvent } from "./studioTelemetry";
 import type { DomEditSelection } from "../components/editor/domEditingTypes";
@@ -182,6 +182,26 @@ export function sdkShadowDispatch(
  * Despite the telemetry focus, this function does mutate the SDK session — it
  * is not read-only. No-op when STUDIO_SDK_SHADOW_ENABLED is false.
  */
+// Property-path mismatches carry user content (inline-style values, edited
+// text) in expected/actual. Scrub before telemetry: fully redact text-content
+// values, length-cap the rest. The in-memory parity result keeps raw values.
+function redactValueForTelemetry(
+  property: string | undefined,
+  value: string | null | undefined,
+): string | null | undefined {
+  if (value == null) return value;
+  if (property === "text") return `[redacted len=${value.length}]`;
+  return value.length > 64 ? `${value.slice(0, 64)}…` : value;
+}
+
+function redactMismatchesForTelemetry(mismatches: SdkShadowMismatch[]): SdkShadowMismatch[] {
+  return mismatches.map((m) => ({
+    ...m,
+    expected: redactValueForTelemetry(m.property, m.expected),
+    actual: redactValueForTelemetry(m.property, m.actual),
+  }));
+}
+
 export function runShadowDispatch(
   session: Composition,
   selection: DomEditSelection,
@@ -191,6 +211,7 @@ export function runShadowDispatch(
   const hfId = selection.hfId;
   if (!hfId) {
     trackStudioEvent("sdk_shadow_dispatch", {
+      op: "property",
       dispatched: false,
       reason: "no_hf_id",
       mismatchCount: 0,
@@ -199,8 +220,185 @@ export function runShadowDispatch(
   }
   const result = sdkShadowDispatch(session, hfId, ops);
   trackStudioEvent("sdk_shadow_dispatch", {
+    op: "property",
     dispatched: result.dispatched,
     mismatchCount: result.mismatches.length,
-    mismatches: JSON.stringify(result.mismatches),
+    mismatches: JSON.stringify(redactMismatchesForTelemetry(result.mismatches)),
+  });
+}
+
+// ─── Shadow for non-PatchOperation ops (delete / timing / GSAP) ───────────────
+//
+// These ops never flow through persistDomEditOperations, so the property-path
+// shadow above never sees them. Each runner keeps the server authoritative and
+// only observes the SDK: can() pre-checks addressing/validity (pure, no
+// mutation — works even for GSAP, which has no element-snapshot value), then a
+// dispatch into the live session with a snapshot-based parity check.
+//
+// Parity coverage by op:
+//   delete  → getElement(id) === null               (full)
+//   timing  → snapshot.start/duration/trackIndex     (full)
+//   gsap    → tween id present/absent in animationIds (existence only — the
+//             tween's property values are script-level, not in the snapshot)
+
+/**
+ * can()-gated shadow dispatch. Emits sdk_shadow_dispatch tagged with `opLabel`.
+ * Mutates the SDK session (not read-only); server stays authoritative.
+ * No-op when STUDIO_SDK_SHADOW_ENABLED is false.
+ */
+function runShadowEditOp(
+  session: Composition,
+  op: EditOp,
+  opLabel: string,
+  dispatchAndCheck: () => SdkShadowMismatch[],
+): void {
+  const verdict = session.can(op);
+  if (!verdict.ok) {
+    trackStudioEvent("sdk_shadow_dispatch", {
+      op: opLabel,
+      dispatched: false,
+      reason: "cannot_dispatch",
+      code: verdict.code,
+      mismatchCount: 0,
+    });
+    return;
+  }
+  let mismatches: SdkShadowMismatch[];
+  try {
+    mismatches = dispatchAndCheck();
+  } catch (err) {
+    trackStudioEvent("sdk_shadow_dispatch", {
+      op: opLabel,
+      dispatched: false,
+      reason: "dispatch_error",
+      error: String(err),
+      mismatchCount: 0,
+    });
+    return;
+  }
+  trackStudioEvent("sdk_shadow_dispatch", {
+    op: opLabel,
+    dispatched: true,
+    mismatchCount: mismatches.length,
+    mismatches: JSON.stringify(mismatches),
+  });
+}
+
+/** Shadow an element delete. Parity: the element is gone from the SDK session. */
+export function runShadowDelete(session: Composition, hfId: string | null | undefined): void {
+  if (!STUDIO_SDK_SHADOW_ENABLED) return;
+  if (!hfId) {
+    trackStudioEvent("sdk_shadow_dispatch", {
+      op: "delete",
+      dispatched: false,
+      reason: "no_hf_id",
+      mismatchCount: 0,
+    });
+    return;
+  }
+  const op: EditOp = { type: "removeElement", target: hfId };
+  runShadowEditOp(session, op, "delete", () => {
+    session.batch(() => session.dispatch(op));
+    return session.getElement(hfId)
+      ? [
+          {
+            kind: "value_mismatch",
+            hfId,
+            property: "exists",
+            expected: "removed",
+            actual: "present",
+          },
+        ]
+      : [];
+  });
+}
+
+export interface ShadowTiming {
+  start?: number;
+  duration?: number;
+  trackIndex?: number;
+}
+
+/** Shadow a timing edit. Parity: snapshot start/duration/trackIndex match. */
+export function runShadowTiming(
+  session: Composition,
+  hfId: string | null | undefined,
+  timing: ShadowTiming,
+): void {
+  if (!STUDIO_SDK_SHADOW_ENABLED) return;
+  if (!hfId) {
+    trackStudioEvent("sdk_shadow_dispatch", {
+      op: "timing",
+      dispatched: false,
+      reason: "no_hf_id",
+      mismatchCount: 0,
+    });
+    return;
+  }
+  const op: EditOp = { type: "setTiming", target: hfId, ...timing };
+  runShadowEditOp(session, op, "timing", () => {
+    session.batch(() => session.dispatch(op));
+    const el = session.getElement(hfId);
+    const mismatches: SdkShadowMismatch[] = [];
+    const fields: Array<[keyof ShadowTiming, number | null | undefined]> = [
+      ["start", el?.start],
+      ["duration", el?.duration],
+      ["trackIndex", el?.trackIndex],
+    ];
+    for (const [key, actual] of fields) {
+      const expected = timing[key];
+      if (expected !== undefined && actual !== expected) {
+        mismatches.push({
+          kind: "value_mismatch",
+          hfId,
+          property: key,
+          expected: String(expected),
+          actual: actual == null ? null : String(actual),
+        });
+      }
+    }
+    return mismatches;
+  });
+}
+
+export type ShadowGsapOp =
+  | { kind: "add"; target: string; tween: GsapTweenSpec }
+  | { kind: "set"; animationId: string; properties: Partial<GsapTweenSpec> }
+  | { kind: "remove"; animationId: string };
+
+/**
+ * Shadow a GSAP tween mutation. Snapshot value-parity is NOT available: the
+ * tween lives in the GSAP <script>, and ElementSnapshot.animationIds is a stub
+ * (always [] — see sdk document.ts). So the signal here is can() addressing /
+ * validity + dispatch-didn't-throw, plus (for add) that the SDK returned a
+ * non-empty tween id. Full fidelity needs serialize()-script round-trip diffing,
+ * out of scope for shadow. // ponytail: upgrade when animationIds is populated.
+ */
+export function runShadowGsapTween(session: Composition, gsapOp: ShadowGsapOp): void {
+  if (!STUDIO_SDK_SHADOW_ENABLED) return;
+  const op: EditOp =
+    gsapOp.kind === "add"
+      ? { type: "addGsapTween", target: gsapOp.target, tween: gsapOp.tween }
+      : gsapOp.kind === "set"
+        ? { type: "setGsapTween", animationId: gsapOp.animationId, properties: gsapOp.properties }
+        : { type: "removeGsapTween", animationId: gsapOp.animationId };
+  runShadowEditOp(session, op, "gsap", () => {
+    let newId: string | undefined;
+    session.batch(() => {
+      if (gsapOp.kind === "add") newId = session.addGsapTween(gsapOp.target, gsapOp.tween);
+      else session.dispatch(op);
+    });
+    if (gsapOp.kind === "add" && !newId) {
+      return [
+        {
+          kind: "value_mismatch",
+          hfId: gsapOp.target,
+          property: "tweenId",
+          expected: "non-empty",
+          actual: null,
+        },
+      ];
+    }
+    return [];
   });
 }
