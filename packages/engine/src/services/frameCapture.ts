@@ -124,9 +124,11 @@ export interface CaptureSession {
    * or the comp is ineligible.
    */
   staticFrames?: Set<number>;
-  /** Last non-deduped frame buffer, reused for `staticFrames` (Task B dedup). */
+  /** Last non-deduped frame buffer, reused for `staticFrames` (Task B dedup, serial path). */
   lastFrameBuffer?: Buffer;
-  /** Count of frames served from `lastFrameBuffer` (Task B dedup telemetry). */
+  /** Last non-deduped encode result, reused for `staticFrames` (Task B dedup, worker path). */
+  lastEncodeResult?: Promise<Buffer>;
+  /** Count of frames served from a reused buffer (Task B dedup telemetry). */
   staticDedupCount?: number;
 }
 
@@ -2064,6 +2066,15 @@ export async function captureFrameToBufferPipelined(
   const { page, options } = session;
   const startTime = Date.now();
 
+  // Task B: static-frame dedup (worker path). Reuse the prior frame's encode result
+  // and skip the seek + drawElement + encode entirely. Same predicate as the serial
+  // path; clip-cut frames are excluded from staticFrames so they always capture.
+  if (session.staticFrames?.has(frameIndex) && session.lastEncodeResult) {
+    session.staticDedupCount = (session.staticDedupCount ?? 0) + 1;
+    session.capturePerf.frames += 1;
+    return { encodeResult: session.lastEncodeResult, captureTimeMs: Date.now() - startTime };
+  }
+
   try {
     const { quantizedTime, seekMs, beforeCaptureMs } = await prepareFrameForCapture(
       session,
@@ -2079,7 +2090,9 @@ export async function captureFrameToBufferPipelined(
       session.capturePerf.seekMs += seekMs;
       session.capturePerf.beforeCaptureMs += beforeCaptureMs;
       session.capturePerf.totalMs += Date.now() - startTime;
-      return { encodeResult: Promise.resolve(buffer), captureTimeMs: Date.now() - startTime };
+      const boundaryResult = Promise.resolve(buffer);
+      if (session.staticFrames) session.lastEncodeResult = boundaryResult;
+      return { encodeResult: boundaryResult, captureTimeMs: Date.now() - startTime };
     }
 
     // Worker-encode is gated to the macOS GPU path (beginFrameTimeTicks === 0,
@@ -2102,6 +2115,9 @@ export async function captureFrameToBufferPipelined(
     // screenshotMs reflects produce time only (encode is async, not tracked here)
     session.capturePerf.screenshotMs += captureTimeMs - seekMs - beforeCaptureMs;
     session.capturePerf.totalMs += captureTimeMs;
+
+    // Task B: retain this encode result so a following static frame can reuse it.
+    if (session.staticFrames) session.lastEncodeResult = encodeResult;
 
     return { encodeResult, captureTimeMs };
   } catch (captureError) {
