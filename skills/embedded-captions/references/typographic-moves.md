@@ -192,14 +192,14 @@ The DNA defaults prevent most ugly outcomes. But avoid in per-group CSS:
   deep warm)
 - `letter-spacing` above ±0.05em unless there's a specific reason
 - `font-weight` 300 or below — too light for screen
-- `font-style: italic` on emphasis — italic is for lyricism, not stress
+- `font-style: italic` on emphasis — self-check: italic is lyricism/quotation/foreign-word/thought only, never stress (canonical: [aesthetic-principles.md](aesthetic-principles.md) rule #8)
 
 ## When cinematic-cream is wrong
 
-This DNA assumes mid-to-dark backgrounds (luminance 60-180). For:
+This DNA assumes mid-to-dark backgrounds (the cream/`screen` luma band — see the `bandLuma × register` pick in [../dna/README.md](../dna/README.md) and the luminance ladder in [../SKILL.md](../SKILL.md) pre-flight #3). For:
 
 - Bright white studios → cinematic-cream's cream + `screen` washes out, and the DNA is
-  **locked** (you cannot recolour it) → use the **`anchor` theme** or **`ink`** (opaque rail / letterpress) instead
+  **locked** (no recolour — see [../SKILL.md](../SKILL.md) § Non-negotiables) → use the **`anchor` theme** or **`ink`** (opaque rail / letterpress) instead
 - Documentary formal → the **`documentary`** column-flow identity (see references/direction-catalog.md §1)
 - Energetic vlog hooks → future `kinetic-vlog` DNA (not yet shipped)
 

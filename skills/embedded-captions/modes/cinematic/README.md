@@ -37,7 +37,7 @@ blocks, per-line typography within the DNA).
   Scene fights the look → pick a different DNA (bright → `ink`), never recolor.
 - Hand-position the hero into a clean margin (it belongs ON the subject, ~30–55%
   occluded — safe-zones `heroBands.best`).
-- Add full-frame grades/textures over the footage (hard rule: the video ships untouched).
+- Add full-frame grades/textures over the footage — the video ships untouched (hard rule + the one PLATE exception: [../../SKILL.md](../../SKILL.md) § Non-negotiables, "Never grade/recolor the footage").
 
 ## Adding a DNA
 

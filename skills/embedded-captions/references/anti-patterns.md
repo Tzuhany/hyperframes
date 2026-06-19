@@ -89,11 +89,13 @@ When scene framing matches `references/example-renders/memory-wall.html` or `cha
 
 ### You default to `mix-blend-mode: overlay`.
 
-Overlay works on **mid-tone** backgrounds. On dark bookshelves (<60 luminance), overlay makes white text render as black. On sunny backgrounds (>180 luminance), overlay blows out. Check the actual luminance of the caption region in a sampled frame. Pick:
+Self-check: sample the caption region's luminance in a real frame, then pick:
 
 - mid-tone surface (60-180) → `overlay`
 - dark surface (<60) → `screen`
 - bright surface (>180) → `normal` with opaque text
+
+Why (overlay→black on dark, screen→white on bright) + the `SHARP`→`ARP` real-bug example and the named template defaults: [failure-modes.md § Blending](failure-modes.md).
 
 _Path note: this manual blend pick is the **hand-authored / clone-and-tweak** path. The dna/theme **engine** locks blend per DNA (`make-composition.cjs` ignores `plan.blend_mode`) — there you use luminance to **pick a fitting identity**, never to recolour ([SKILL.md](../SKILL.md) pre-flight #3, [dna/README.md](../dna/README.md))._
 
@@ -123,15 +125,7 @@ Caption at exactly t=0 feels like it was there before the video started. Offset 
 
 ### You trust that "looks like one speaker" = "is one speaker throughout."
 
-TV archive clips cut to B-roll mid-sentence. Interview clips insert cutaways to the interviewer. You didn't check frames beyond the first one, so you rendered captions across a shot transition. Result: captions designed for Subject A are placed relative to Subject B's position (or empty frame) for half the render.
-
-Sample frames at 20%, 50%, 80% BEFORE planning. If the scene changes, trim to the largest single-subject segment.
-
-### You ignore baked-in captions / pillarbox / watermarks.
-
-You saw black bars on the sides and didn't computing the safe-zone. Your captions cross the pillarbox. Or: the source already has burned-in subtitles and you added more — two caption systems fighting for attention.
-
-Run the **letterbox probe** first. If the source has existing captions, refuse with: "source already captioned, adding more would conflict."
+Self-check: you skipped the shot-cut probe and rendered captions across a hidden cut (Subject A's layout applied to Subject B / B-roll). Run the scene-admission gate before planning — shot-cut, letterbox/pillarbox, and baked-in-caption refuse rules, contact-sheet not spot-frames — in [SKILL.md § Decision gate / Pre-flight probes](../SKILL.md). Deeper why + the Jobs→Beatles cut-at-t=9s example: [failure-modes.md § Scene admission](failure-modes.md).
 
 ### You ship Whisper's transcript without checking timings against the beat.
 
@@ -155,9 +149,7 @@ DECISION FLIPPED 2026-06-12 after a 5-model × 6-scene A/B with caption renders:
 
 ### You caption every word.
 
-Transcripts are verbose — "you know, um, I, I mean, you know" is 5 words from a single beat. Captioning all of them clutters the screen and breaks reading rhythm.
-
-Editorially drop filler. Use the rules in [caption-grouping.md](caption-grouping.md): merge short fragments, cut repeated discourse markers, keep the meaning, trim the noise. You are writing typography to support speech, not a court transcript.
+Self-check: am I transcribing instead of editing? The rail carries most text; embed is the scarce, earned peak — drop filler, never caption every word. Full model → [../SKILL.md § Caption model](../SKILL.md#caption-model--rail--embed); the merge/condense/skip mechanics → [caption-grouping.md](caption-grouping.md).
 
 ### You group by fixed word-count.
 

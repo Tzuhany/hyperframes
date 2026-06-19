@@ -56,6 +56,8 @@ Italics are a **print** convention for flow inside a paragraph. On 24fps motion 
 - Foreign word
 - Thought vs spoken dichotomy
 
+These exceptions are where the catalog deliberately spends italic — sanctioned, not violations: the **editorial** DNA's _lowercase italic hero_ ([../dna/README.md](../dna/README.md)) and the `intro` (66px italic) / `dream` (82px italic) presets ([typography-presets.md](typography-presets.md)) signal memory / contemplation / lyricism, never stress.
+
 ### 9. Color discipline: one hue + neutrals
 
 Pick **one** saturated accent per video for keyword highlights. Hormozi's yellow+green+red works for him because his content is already loud. Cinematic = single accent + white/bone/charcoal. Default palette:
@@ -66,7 +68,7 @@ Pick **one** saturated accent per video for keyword highlights. Hormozi's yellow
 
 ### 10. Animate transform only, never the letter itself
 
-`letter-spacing`, `filter:blur`, `font-weight` animations cause inline-block reflow → line-jumps. Animate `translateY`, `scale`, `opacity`, `clip-path`. This is locked from the embedded-captions debugging.
+On flow words, animate `translateY` / `scale` / `opacity` / `clip-path` only — never `letter-spacing`, `filter:blur`, `font-size`, or `font-weight` (inline-block reflow → line-jumps). The isolated climax/hero span is exempt. Canonical allowlist + why: [failure-modes.md § Animation](failure-modes.md), engine statement [../modes/shared/\_anatomy.md](../modes/shared/_anatomy.md).
 
 ### 11. Minimum 0.4s per word visible
 
@@ -107,7 +109,7 @@ This is what separates Submagic-preset work from something designed.
 
 ### 15. Caption what adds, cut what restates
 
-Transcribe everything. **Display** 70–85%. Remove:
+Transcribe everything; **display only 70–85%** (the editorial-drop principle and its grading live in [../SKILL.md § Caption model](../SKILL.md#caption-model--rail--embed) and [composition-craft.md § Step 0](composition-craft.md)). The unique-to-this-rule cuts:
 
 - Filler ("um", "like", "you know", "I mean")
 - Self-corrections ("I think... I mean actually...")

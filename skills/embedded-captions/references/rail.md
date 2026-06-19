@@ -55,7 +55,7 @@ leave the rail. Anything that wants to leave the rail is an `embed`, not an emph
 - Never goes behind the subject (that's embed).
 - Never accumulates into a multi-line poem (that's embed).
 - Never crosses the face / uses occlusion as an effect.
-- Never grades or textures the underlying video.
+- Never grades or textures the underlying video (footage ships untouched — see [../SKILL.md](../SKILL.md) § Non-negotiables, "Never grade/recolor the footage").
 - Doesn't drop content to "fit fewer blocks" — split into more groups instead. The only drops
   are filler (um/uh, exact stutters, self-corrections); dense conversational `narrator` glue
   ("you know", "sort of") may be trimmed for readability, content/structure words stay.

@@ -64,7 +64,7 @@ You do NOT have to caption every word. It's fine to:
 - **Condense** a 6-word run into 4 by cutting function words, as long as the meaning and timing remain truthful.
 - **Skip the whole thing** during obvious silence or non-speech (laugh, music interlude).
 
-Editorial rule: you are writing typography to support the speech, not a court transcript. Keep meaning, trim noise.
+Editorial rule: you are writing typography to support the speech, not a court transcript. Keep meaning, trim noise. (Why this serves the scarcity model — rail carries most text, embed is the earned peak — see [composition-craft.md § Step 0](composition-craft.md) and [../SKILL.md § Caption model](../SKILL.md#caption-model--rail--embed).)
 
 ## Example (champion)
 
