@@ -223,19 +223,40 @@ track has its own, much simpler spec → **[references/rail.md](references/rail.
 
 ## Shared knowledge
 
-| Doc                                                                      | What                                                                                                                                          |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| [references/rail.md](references/rail.md)                                 | **The rail track** — standard lower-third subtitle spec (the default; carries most text).                                                     |
-| [references/composition-craft.md](references/composition-craft.md)       | **The embed-track playbook** — grouping, planes, climax pop, occlusion judgement, accumulation/persistence. Read before embedding.            |
-| [dna/README.md](dna/README.md)                                           | **The DNA registry** — ten scene-parameterized visual languages; how to pick.                                                                 |
-| [references/reference-bar.md](references/reference-bar.md)               | **The taste bar** — per-register world-class references + the 5 positive checks.                                                              |
-| [references/aesthetic-principles.md](references/aesthetic-principles.md) | **The 18 rules.** Beat Veed AI on taste. Read first.                                                                                          |
-| [references/anti-patterns.md](references/anti-patterns.md)               | Bugs already locked out (CoreML, letter-spacing reflow, etc.)                                                                                 |
-| [references/layout-heuristics.md](references/layout-heuristics.md)       | Step 0 embed-viability gate (is a surface usable — 4 conditions); plane positioning, clean-zone selection, crown 3 conditions, pillarbox math |
-| [references/typography-presets.md](references/typography-presets.md)     | Font-size × column-width matrix (starting points)                                                                                             |
-| [references/caption-grouping.md](references/caption-grouping.md)         | Word → group rules (pauses, sentence boundaries)                                                                                              |
-| [references/failure-modes.md](references/failure-modes.md)               | Long tail of dev gotchas                                                                                                                      |
-| [references/bespoke-vs-presets.md](references/bespoke-vs-presets.md)     | Why presets fail sometimes; clone-and-tweak pattern                                                                                           |
+Grouped by when you reach for them — taste first, then the two rulebooks, then mechanics, then the gotcha store (read top-down; skim tiers 3–4 by need).
+
+**1 · Taste — read first**
+
+| Doc                                                                      | What                                                                                  |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| [references/aesthetic-principles.md](references/aesthetic-principles.md) | **The 18 rules** + the self-critique checklist. Beat Veed AI on taste.                |
+| [references/reference-bar.md](references/reference-bar.md)               | **The taste bar** — per-register world-class references + the 5 positive ship-checks. |
+
+**2 · Two rulebooks — the core split**
+
+| Doc                                                                | What                                                                                                                     |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| [references/rail.md](references/rail.md)                           | **The rail track** — standard lower-third subtitle spec (the default; carries most text).                                |
+| [references/composition-craft.md](references/composition-craft.md) | **The embed-track playbook** — grouping, planes, climax pop, occlusion, accumulation/persistence. Read before embedding. |
+
+**3 · Authoring mechanics — skim by need**
+
+| Doc                                                                  | What                                                                                                                                           |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| [references/layout-heuristics.md](references/layout-heuristics.md)   | Step 0 embed-viability gate (is a surface usable — 4 conditions); plane positioning, clean-zone selection, crown 3 conditions, pillarbox math. |
+| [references/caption-grouping.md](references/caption-grouping.md)     | Word → group rules (pauses, sentence boundaries, editorial drop).                                                                              |
+| [references/typography-presets.md](references/typography-presets.md) | Font-size × column-width matrix (starting points).                                                                                             |
+| [references/typographic-moves.md](references/typographic-moves.md)   | Per-group typographic palette — the named moves + size-vs-length sanity.                                                                       |
+| [references/bespoke-vs-presets.md](references/bespoke-vs-presets.md) | Clone-and-tweak from the canonical example renders; when presets fall short.                                                                   |
+| [dna/README.md](dna/README.md)                                       | **The DNA registry** — ten scene-parameterized column-flow languages; how to pick.                                                             |
+
+**4 · Gotcha store — by section, on failure**
+
+| Doc                                                        | What                                                                               |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [references/anti-patterns.md](references/anti-patterns.md) | Terse "you default to this, stop" rules (CoreML, letter-spacing reflow, …).        |
+| [references/failure-modes.md](references/failure-modes.md) | The mechanism + named bug instances behind each gotcha (SHARP→ARP, cg-4 y=700, …). |
+| [modes/shared/\_motion.md](modes/shared/_motion.md)        | The motion catalog — FLOW/CLIMAX entrance/exit recipes + mood→motion.              |
 
 **Read the aesthetic principles FIRST.** Everything else is implementation detail.
 
