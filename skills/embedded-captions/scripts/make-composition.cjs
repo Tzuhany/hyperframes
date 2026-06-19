@@ -2,14 +2,14 @@
 /*
  * make-composition.cjs — compile plan.json → index.html (CINEMATIC MODE).
  *
- * DNA path (canonical): plan.dna names a dna/<name>.json → modes/cinematic/engine.html
+ * DNA path (canonical): plan.dna names a dna/<name>.json → cinematic/engine.html
  * is compiled with scene-resolved tokens (lib-dna.cjs): scene-sampled accent, light-
  * direction contact shadow, depth-match blur, hero three-act orchestration with
  * RMS-coupled amplitude. plan.template="cinematic-cream" maps to dna "cream".
  *
  * Legacy path: plan.template naming a template dir still compiles 1:1, but the old
  * per-template shells (memory-wall / champion / portrait-header) are no longer shipped —
- * recover from git history into modes/cinematic/ if ever needed.
+ * recover from git history into cinematic/ if ever needed.
  *
  *   node make-composition.cjs <project-dir>
  */
@@ -19,7 +19,7 @@ const cp = require("child_process");
 const dnaLib = require("./lib-dna.cjs");
 
 const SKILL_ROOT = path.resolve(__dirname, "..");
-const TEMPLATES = path.join(SKILL_ROOT, "modes", "cinematic");
+const TEMPLATES = path.join(SKILL_ROOT, "cinematic");
 
 // Source clip duration (seconds) via ffprobe. The COMPOSITION/background length must
 // follow the SOURCE, not the last caption — see the Bug-1 note in main().

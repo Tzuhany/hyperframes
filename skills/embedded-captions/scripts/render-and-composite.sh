@@ -66,7 +66,7 @@ else
   # for cinematic projects the FULL compiler is make-cinematic (compiler_for points
   # at make-composition, which only re-emits html from an already-compiled plan)
   if [[ -f "$PROJECT/cinematic.json" && "$C" == "make-composition.cjs" ]]; then RECOMPILER="make-cinematic.cjs"; fi
-  ENGINE="$(dirname "$0")/../modes/cinematic/engine.html"
+  ENGINE="$(dirname "$0")/../cinematic/engine.html"
   if [[ "$(dirname "$0")/$RECOMPILER" -nt "$PROJECT/index.html" || "$(dirname "$0")/lib-dna.cjs" -nt "$PROJECT/index.html" || ( -f "$ENGINE" && "$ENGINE" -nt "$PROJECT/index.html" ) ]]; then
     echo "[render] compiler/engine newer than index.html — recompiling via $RECOMPILER"
     node "$(dirname "$0")/$RECOMPILER" "$PROJECT"
@@ -78,7 +78,7 @@ fi
 # Press Start 2P, …) silently falls back to a generic font on a clean/offline/CI
 # machine — it only "looks right" locally when that font happens to be installed
 # as a system font. inject-fonts inlines the @font-face (base64 woff2, from
-# modes/shared/fonts/fonts.css) for whatever non-canonical families each HTML
+# assets/fonts/fonts.css) for whatever non-canonical families each HTML
 # actually uses, so measure-layout AND the capture see the true glyph metrics.
 # Idempotent; a no-op when every font is canonical/system or already declared.
 node "$(dirname "$0")/inject-fonts.cjs" "$PROJECT" \

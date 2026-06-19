@@ -68,7 +68,7 @@ Pick **one** saturated accent per video for keyword highlights. Hormozi's yellow
 
 ### 10. Animate transform only, never the letter itself
 
-On flow words, animate `translateY` / `scale` / `opacity` / `clip-path` only — never `letter-spacing`, `filter:blur`, `font-size`, or `font-weight` (inline-block reflow → line-jumps). The isolated climax/hero span is exempt. Canonical allowlist + why: [failure-modes.md § Animation](failure-modes.md), engine statement [../modes/shared/\_anatomy.md](../modes/shared/_anatomy.md).
+On flow words, animate `translateY` / `scale` / `opacity` / `clip-path` only — never `letter-spacing`, `filter:blur`, `font-size`, or `font-weight` (inline-block reflow → line-jumps). The isolated climax/hero span is exempt. Canonical allowlist + why: [failure-modes.md § Animation](failure-modes.md), engine statement [\_anatomy.md](_anatomy.md).
 
 ### 11. Minimum 0.4s per word visible
 

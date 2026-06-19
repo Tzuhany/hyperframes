@@ -151,7 +151,7 @@ _(Matting is CPU-only — ~2 fps @1080p ≈ 2–3 min per 10s clip, budget for i
 
 The engine generates the **hero three-act** from the DNA (no authoring needed): co-visible captions dim (setup) → per-letter entrance with amplitude ∝ spoken loudness (impact) → breathe + glow until exit (afterglow).
 
-_(Legacy `plan.template:"cinematic-cream"` maps to `dna:"cream"` automatically. The retired 54-template library lives at `~/Downloads/embedded-captions-archive/standard-templates-54/`; `modes/shared/_motion.md` remains the in-skill motion-verb catalog.)_
+_(Legacy `plan.template:"cinematic-cream"` maps to `dna:"cream"` automatically. The retired 54-template library lives at `~/Downloads/embedded-captions-archive/standard-templates-54/`; `references/_motion.md` remains the in-skill motion-verb catalog.)_
 
 ---
 
@@ -191,7 +191,7 @@ Grouped by when you reach for them; **read the aesthetic principles FIRST**, the
 | ---------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | [references/anti-patterns.md](references/anti-patterns.md) | Terse "you default to this, stop" rules (CoreML, letter-spacing reflow, …).        |
 | [references/failure-modes.md](references/failure-modes.md) | The mechanism + named bug instances behind each gotcha (SHARP→ARP, cg-4 y=700, …). |
-| [modes/shared/\_motion.md](modes/shared/_motion.md)        | The motion catalog — FLOW/CLIMAX entrance/exit recipes + mood→motion.              |
+| [references/\_motion.md](references/_motion.md)            | The motion catalog — FLOW/CLIMAX entrance/exit recipes + mood→motion.              |
 
 ---
 

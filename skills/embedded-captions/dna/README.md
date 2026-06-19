@@ -145,5 +145,5 @@ afterglow scale channel stays free; loom subsumes breathe).
 ## Adding a DNA
 
 Copy an existing `dna/<name>.json`, change the voice, keep the schema. The engine
-(`modes/cinematic/engine.html`) and both compilers consume it as-is. A DNA earns its
+(`cinematic/engine.html`) and both compilers consume it as-is. A DNA earns its
 place by being a _distinct voice with a reason to exist_ — not a recolor.
