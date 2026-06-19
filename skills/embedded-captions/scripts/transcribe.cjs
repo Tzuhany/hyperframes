@@ -23,6 +23,51 @@ function hfRoot() {
   console.error("[transcribe] hyperframes CLI not found — set HYPERFRAMES_ROOT");
   process.exit(3);
 }
+// WhisperX runs through `uvx` (Astral's uv). uv is NOT bundled with hyperframes and most
+// installs lack it -> resolve it; OPT-IN auto-install with EC_INSTALL_UV=1 via the official
+// standalone installer (single binary, no Python/npm). Returns a uvx path, or null -> caller
+// falls back to the bundled whisper.cpp (looser, segment-interpolated word timings).
+function resolveUvx() {
+  const localBin = path.join(os.homedir(), ".local", "bin", "uvx");
+  const probe = (bin) => {
+    try {
+      cp.execFileSync(bin, ["--version"], { stdio: "ignore" });
+      return bin;
+    } catch {
+      return null;
+    }
+  };
+  const found = probe("uvx") || (fs.existsSync(localBin) ? probe(localBin) : null);
+  if (found) return found;
+  if (process.env.EC_INSTALL_UV !== "1") {
+    console.error(
+      "[transcribe] uv/uvx not found -> using whisper.cpp fallback (looser word timings).\n" +
+        "             For tighter WhisperX timings: re-run with EC_INSTALL_UV=1 to auto-install uv,\n" +
+        "             or install it manually: curl -LsSf https://astral.sh/uv/install.sh | sh",
+    );
+    return null;
+  }
+  console.error("[transcribe] EC_INSTALL_UV=1 -> installing uv (Astral standalone installer)...");
+  try {
+    cp.execSync("curl -LsSf https://astral.sh/uv/install.sh | sh", { stdio: "inherit" });
+  } catch (e) {
+    console.error(
+      "[transcribe] uv auto-install failed (" +
+        String(e.message || e).slice(0, 120) +
+        ") -> whisper.cpp fallback",
+    );
+    return null;
+  }
+  const after = probe(localBin) || probe("uvx");
+  if (after) {
+    console.error("[transcribe] uv installed -> " + after);
+    return after;
+  }
+  console.error(
+    "[transcribe] uv installed but uvx not on the expected PATH -> whisper.cpp fallback",
+  );
+  return null;
+}
 function ensureSource(project) {
   const src = path.join(project, "source.mp4");
   if (fs.existsSync(src)) return src;
@@ -166,7 +211,8 @@ function main() {
   let words = null,
     engine = null;
   const wantWx = (process.env.TRANSCRIBE_ENGINE || "whisperx") === "whisperx";
-  if (wantWx) {
+  const UVX = wantWx ? resolveUvx() : null;
+  if (UVX) {
     try {
       const wav = path.join(project, "_wx_audio.wav");
       cp.execFileSync("ffmpeg", ["-y", "-i", src, "-vn", "-ac", "1", "-ar", "16000", wav], {
@@ -198,10 +244,10 @@ function main() {
       ];
       if (language) wxArgs.push("--language", language);
       // strip our flag if this whisperx build doesn't know it
-      let r = cp.spawnSync("uvx", wxArgs, { encoding: "utf8", timeout: 600000 });
+      let r = cp.spawnSync(UVX, wxArgs, { encoding: "utf8", timeout: 600000 });
       if ((r.status || 0) !== 0 && /no_align_deletes/.test(r.stderr || "")) {
         r = cp.spawnSync(
-          "uvx",
+          UVX,
           wxArgs.filter((a) => a !== "--no_align_deletes"),
           { encoding: "utf8", timeout: 600000 },
         );
