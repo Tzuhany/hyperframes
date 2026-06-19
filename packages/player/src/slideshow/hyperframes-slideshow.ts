@@ -362,14 +362,7 @@ export class HyperframesSlideshow extends HTMLElement {
       // Audience (viewer) window: no nav controls — but keep a fullscreen toggle
       // so the presentation can fill the display.
       const { counter } = this.controller;
-      if (!this.chrome) {
-        this.chrome = document.createElement("div");
-        this.chrome.setAttribute("data-hf-chrome", "");
-        this.appendChild(this.chrome);
-      }
-      this.chrome.style.cssText = "position:absolute;inset:0;pointer-events:none;z-index:10;";
-      this.chrome.innerHTML = this.buildNavCluster(counter, "28px", "fs-only");
-      this.wireChromeButtons();
+      this.paintChrome(this.buildNavCluster(counter, "28px", "fs-only"));
       return;
     }
 
@@ -380,13 +373,6 @@ export class HyperframesSlideshow extends HTMLElement {
 
     const { counter, currentSlide } = this.controller;
     if (!currentSlide) return;
-
-    if (!this.chrome) {
-      this.chrome = document.createElement("div");
-      this.chrome.setAttribute("data-hf-chrome", "");
-      this.chrome.style.cssText = "position:absolute;inset:0;pointer-events:none;z-index:10;";
-      this.appendChild(this.chrome);
-    }
 
     // Inject keyframes for hotspot pulse animation once per document.
     injectKeyframesOnce();
@@ -411,14 +397,25 @@ export class HyperframesSlideshow extends HTMLElement {
       })
       .join("");
 
+    this.paintChrome(hotspotsHtml + this.buildNavCluster(counter, "28px"));
+  }
+
+  /** Ensure the overlay chrome layer exists, set its content, and wire its buttons. */
+  private paintChrome(html: string): void {
+    if (!this.chrome) {
+      this.chrome = document.createElement("div");
+      this.chrome.setAttribute("data-hf-chrome", "");
+      this.appendChild(this.chrome);
+    }
     this.chrome.style.cssText = "position:absolute;inset:0;pointer-events:none;z-index:10;";
-    this.chrome.innerHTML = hotspotsHtml + this.buildNavCluster(counter, "28px");
+    this.chrome.innerHTML = html;
     this.wireChromeButtons();
   }
 
   // Builds the nav cluster ([mute?] [prev] counter [next] | [fullscreen]) as a
   // floating capsule. `bottomCss` positions it (normal view: "28px"; presenter
   // view: above the notes panel). Reused by render() and renderPresenter().
+  // fallow-ignore-next-line complexity
   private buildNavCluster(
     counter: { index: number; total: number },
     bottomCss: string,
@@ -572,22 +569,17 @@ export class HyperframesSlideshow extends HTMLElement {
       playerEl.style.height = "auto";
     }
 
-    if (!this.chrome) {
-      this.chrome = document.createElement("div");
-      this.chrome.setAttribute("data-hf-chrome", "");
-      this.appendChild(this.chrome);
-    }
     // Full-overlay chrome (pointer-events:none); the notes panel and nav cluster
     // are the only interactive children.
-    this.chrome.style.cssText = "position:absolute;inset:0;pointer-events:none;z-index:10;";
-    this.chrome.innerHTML =
+    this.paintChrome(
       buildPresenterLayout({
         notes: currentSlide.notes ?? "",
         nextText: nextPanelText(nextSlide),
         counterText: `${counter.index} / ${counter.total}`,
         elapsedText: formatElapsed(elapsedSec),
-      }) + this.buildNavCluster(counter, "calc(32% + 18px)");
-    this.wireChromeButtons();
+        hotspots: currentSlide.hotspots,
+      }) + this.buildNavCluster(counter, "calc(32% + 18px)"),
+    );
   }
 }
 

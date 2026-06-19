@@ -47,9 +47,9 @@ const SHOW: ResolvedSlideshow = {
 function showAtFrag1() {
   const p = fakePlayer();
   const c = new SlideshowController(p, SHOW);
-  p.emit(2); // fragmentIndex=0
+  p.emit(2.2); // fragmentIndex=0
   c.next(); // target=4
-  p.emit(4); // fragmentIndex=1
+  p.emit(4.2); // fragmentIndex=1
   return { p, c };
 }
 
@@ -69,9 +69,9 @@ describe("SlideshowController linear nav", () => {
   it("enters the first slide on construction: jumps to the first hold (no auto-play)", () => {
     const p = fakePlayer();
     new SlideshowController(p, SHOW);
-    // No auto-play: jumps to the first hold (fragments[0]=2), seeking just before
-    // it (minus the render-nudge) so the composition repaints.
-    expect(p.seek).toHaveBeenCalledWith(1.8);
+    // No auto-play: seeks (jumps) to the first hold, fragments[0]=2;
+    // playTo then plays a brief forward render-nudge and pauses there.
+    expect(p.seek).toHaveBeenCalledWith(2);
     expect(p.play).toHaveBeenCalled();
   });
 
@@ -86,7 +86,7 @@ describe("SlideshowController linear nav", () => {
   it("next stops at the first fragment, not the next slide", () => {
     const p = fakePlayer();
     const c = new SlideshowController(p, SHOW);
-    p.emit(2); // play reaches fragment 0, controller pauses
+    p.emit(2.2); // play reaches fragment 0, controller pauses
     expect(p.pause).toHaveBeenCalled();
     expect(c.position.slideIndex).toBe(0);
     expect(c.position.fragmentIndex).toBe(0);
@@ -96,12 +96,12 @@ describe("SlideshowController linear nav", () => {
     const p = fakePlayer();
     const c = new SlideshowController(p, SHOW);
     c.next(); // -> fragment 1 target (2)
-    p.emit(2);
+    p.emit(2.2);
     c.next(); // -> fragment 2 target (4)
-    p.emit(4);
+    p.emit(4.2);
     c.next(); // no more fragments — advance to slide b immediately
     expect(c.position.slideIndex).toBe(1);
-    expect(p.seek).toHaveBeenLastCalledWith(9.8); // slide b end (10) minus render-nudge
+    expect(p.seek).toHaveBeenLastCalledWith(7.5); // slide b midpoint
   });
 
   it("next() on a slide with NO fragments advances to the next slide immediately", () => {
@@ -125,7 +125,7 @@ describe("SlideshowController linear nav", () => {
     // slide 0 has no fragments; one next() should advance immediately to slide 1
     c2.next();
     expect(c2.position.slideIndex).toBe(1);
-    expect(p2.seek).toHaveBeenLastCalledWith(9.8); // slide b end (10) minus render-nudge
+    expect(p2.seek).toHaveBeenLastCalledWith(7.5); // slide b midpoint
   });
 
   it("next() on the last slide is a no-op", () => {
@@ -147,11 +147,11 @@ describe("SlideshowController linear nav", () => {
   it("auto-pauses at a fragment, then next advances to the FOLLOWING fragment (not the end)", () => {
     const p = fakePlayer();
     const c = new SlideshowController(p, SHOW);
-    p.emit(2); // auto-pause at fragments[0]=2
+    p.emit(2.2); // auto-pause at fragments[0]=2
     expect(c.position.fragmentIndex).toBe(0);
     p.pause.mockClear(); // clear the pause from the auto-stop above
     c.next(); // should target fragments[1]=4, NOT slide.end=5
-    p.emit(4);
+    p.emit(4.2);
     expect(p.pause).toHaveBeenCalled(); // must pause at 4, not skip to 5
     expect(c.position.fragmentIndex).toBe(1);
   });
@@ -188,7 +188,7 @@ describe("SlideshowController branching", () => {
     c.enterBranch("deep");
     expect(c.position.sequenceId).toBe("deep");
     expect(c.currentSlide?.sceneId).toBe("c");
-    expect(p.seek).toHaveBeenLastCalledWith(12.8); // slide c end (13) minus render-nudge
+    expect(p.seek).toHaveBeenLastCalledWith(11.5); // slide c midpoint
   });
 
   it("counter is scoped to the current sequence", () => {
@@ -228,19 +228,19 @@ describe("SlideshowController Fix 8a — fragmentIndex advances via onTime not n
     c.next();
     expect(c.position.fragmentIndex).toBe(-1); // still -1 until onTime fires
     // Simulate playback reaching the hold point (fragments[0]=2)
-    p.emit(2);
+    p.emit(2.2);
     expect(c.position.fragmentIndex).toBe(0); // onTime advanced it
   });
 
   it("next() after auto-pause targets the FOLLOWING fragment without pre-increment (regression)", () => {
     const p = fakePlayer();
     const c = new SlideshowController(p, SHOW);
-    p.emit(2); // auto-pause at fragments[0]=2; fragmentIndex=0
+    p.emit(2.2); // auto-pause at fragments[0]=2; fragmentIndex=0
     expect(c.position.fragmentIndex).toBe(0);
     p.pause.mockClear();
     c.next(); // should target fragments[1]=4 — fragmentIndex stays 0 until emit
     expect(c.position.fragmentIndex).toBe(0); // NOT yet 1
-    p.emit(4);
+    p.emit(4.2);
     expect(p.pause).toHaveBeenCalled();
     expect(c.position.fragmentIndex).toBe(1); // onTime advanced it
   });
@@ -258,7 +258,7 @@ describe("SlideshowController Fix 8b — back() restores parent fragmentIndex", 
     expect(c.position.sequenceId).toBe("main");
     expect(c.position.slideIndex).toBe(0);
     expect(c.position.fragmentIndex).toBe(1);
-    expect(p.seek).toHaveBeenLastCalledWith(3.8); // fragments[1] (4) minus render-nudge
+    expect(p.seek).toHaveBeenLastCalledWith(4); // fragments[1] = 4
   });
 
   it("back() when parent fragmentIndex=-1 seeks to slide start", () => {
@@ -356,8 +356,8 @@ describe("SlideshowController Fix #backToMain — restores fragment position lik
     expect(c.position.sequenceId).toBe("main");
     expect(c.position.slideIndex).toBe(0);
     expect(c.position.fragmentIndex).toBe(1);
-    // resumeSlide seeks to the fragment time (fragments[1]=4) minus the render-nudge
-    expect(p.seek).toHaveBeenLastCalledWith(3.8);
+    // resumeSlide seeks to the fragment time (fragments[1]=4)
+    expect(p.seek).toHaveBeenLastCalledWith(4);
   });
 
   it("backToMain when root fragmentIndex=-1 seeks to slide start", () => {
@@ -604,7 +604,7 @@ describe("SlideshowController syncTo", () => {
     // resumeSlide seeks to slide start, then plays one frame so the composition
     // repaints (a bare paused seek doesn't re-render some compositions); onTime
     // pauses again as soon as the player reports it has reached the hold.
-    expect(p.seek).toHaveBeenLastCalledWith(9.8); // slide start (10) minus render-nudge
+    expect(p.seek).toHaveBeenLastCalledWith(10); // slide start
     expect(p.play).toHaveBeenCalled();
     p.emit(50); // player passes the render-nudge hold
     expect(p.pause).toHaveBeenCalled();
@@ -617,7 +617,7 @@ describe("SlideshowController syncTo", () => {
     expect(c.position.sequenceId).toBe("main");
     expect(c.position.slideIndex).toBe(0);
     expect(c.position.fragmentIndex).toBe(1);
-    expect(p.seek).toHaveBeenLastCalledWith(3.8); // fragments[1] (4) minus render-nudge
+    expect(p.seek).toHaveBeenLastCalledWith(4); // fragments[1] = 4
   });
 
   it("ignores an unknown sequence target", () => {
