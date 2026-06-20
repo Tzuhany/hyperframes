@@ -66,7 +66,7 @@ else
   # for cinematic projects the FULL compiler is make-cinematic (compiler_for points
   # at make-composition, which only re-emits html from an already-compiled plan)
   if [[ -f "$PROJECT/cinematic.json" && "$C" == "make-composition.cjs" ]]; then RECOMPILER="make-cinematic.cjs"; fi
-  ENGINE="$(dirname "$0")/../cinematic/engine.html"
+  ENGINE="$(dirname "$0")/cinematic-engine.html"
   if [[ "$(dirname "$0")/$RECOMPILER" -nt "$PROJECT/index.html" || "$(dirname "$0")/lib-dna.cjs" -nt "$PROJECT/index.html" || ( -f "$ENGINE" && "$ENGINE" -nt "$PROJECT/index.html" ) ]]; then
     echo "[render] compiler/engine newer than index.html — recompiling via $RECOMPILER"
     node "$(dirname "$0")/$RECOMPILER" "$PROJECT"

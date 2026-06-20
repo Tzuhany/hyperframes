@@ -2,24 +2,7 @@
 
 The 5 preset styles (`intro / phrase / emph / dream / crown`) and the 3 templates (`wall-embed`, `corner-column-crown`, `portrait-header`) are **scaffolds**, not rules. The best renders we've shipped all override presets for specific groups because **typography is a per-scene decision**, not a general rule.
 
-If you only use presets, your render will look generic. If you only copy existing renders, your skill won't adapt. The right workflow is:
-
-1. **Decide the shape first** (template choice, plane position, blend mode).
-2. **Check if a canonical example is close enough** → clone and tweak words + timings.
-3. **Otherwise start from presets** → override per-group via `custom_css`.
-
----
-
-## Canonical example renders
-
-Full HTML for two validated renders is in `references/example-renders/`:
-
-| File               | Scene                                                   | What makes it work                                                                                                                                                                                         |
-| ------------------ | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `memory-wall.html` | Introspective monologue, right-side foam wall, mid-tone | Right-aligned cascade, per-group bespoke sizes (`cap-1` 78 italic / `cap-2` 66 italic + right hanging-indent / `cap-3` 72 upright / `cap-4` 90 uppercase). `mix-blend-mode: screen` for the dark-ish foam. |
-| `champion.html`    | Podcast interview, cluttered bookshelf, 1920×1080       | Upper-left column + center-stage crown. Tuned preset class sizes (`cap-intro` 52 / `cap-phrase` 60 / `cap-emph` 70 / `cap-crown` 140). `screen` blend reads the shelves through text.                      |
-
-**When a new scene matches one of these closely** (similar framing, similar subject-center, similar backdrop type): clone the HTML and only replace the GROUPS array + word timings. Don't re-derive the design from presets — you'll lose the specific choices that took many iterations to validate.
+If you only use presets, your render will look generic. Typography is a per-scene decision: start from the identity's defaults, then **override per-group via `custom_css`** where a phrase earns its own treatment.
 
 ---
 
@@ -128,45 +111,6 @@ Template preset sizes are tuned for a specific column width + frame size. Don't 
 ```
 
 Then check [typography-presets.md § Font-size scales with column width](typography-presets.md) for what to aim at given your plane's actual dimensions.
-
----
-
-## The clone-and-tweak workflow
-
-For a new video that's clearly similar to an existing canonical example:
-
-```bash
-# 1. Scaffold the project
-hyperframes init <project> --non-interactive --video <video.mp4> --skip-skills
-
-# 2. Matte + transcribe
-node scripts/matte.cjs <project>
-node scripts/transcribe.cjs <project>
-
-# 3. Copy the canonical HTML instead of writing plan.json
-cp references/example-renders/memory-wall.html <project>/index.html
-
-# 4. Replace GROUPS array with the new transcript's grouping (hand-edit index.html)
-
-# 5. Render directly (skip make-composition.cjs since we're not using plan.json)
-bash scripts/render-and-composite.sh <project>
-```
-
-This skips the preset-based plan.json entirely. Use when:
-
-- Subject framing, shot composition, and backdrop type are similar to the example
-- You just need to swap the words and timings
-- The bespoke typography from the example is what you want
-
-**Don't clone when**:
-
-- Subject position differs significantly (e.g. centered vs off-center)
-- Scene luminance / blend-mode needs are different
-- You want to experiment with new typography
-
-In those cases, start with plan.json + custom_css and iterate.
-
----
 
 ## Rendering history
 

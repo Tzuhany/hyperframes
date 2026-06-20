@@ -79,10 +79,6 @@ The `"style"` field in plan.json accepts **any string** — it becomes `class="c
 
 When the scene needs per-position bespoke typography, do this. Don't force-fit into `intro / phrase / emph`.
 
-### You regenerate from plan.json when a canonical example already has the answer.
-
-When scene framing matches `references/example-renders/memory-wall.html` or `champion.html`, clone that HTML into `<project>/index.html` and only swap the GROUPS array. Don't re-derive the design from presets — you'll lose the specific per-position typography that took many iterations to validate. See [bespoke-vs-presets.md § The clone-and-tweak workflow](bespoke-vs-presets.md).
-
 ---
 
 ## Blending
@@ -97,7 +93,7 @@ Self-check: sample the caption region's luminance in a real frame, then pick:
 
 Why (overlay→black on dark, screen→white on bright) + the `SHARP`→`ARP` real-bug example and the named template defaults: [failure-modes.md § Blending](failure-modes.md).
 
-_Path note: this manual blend pick is the **hand-authored / clone-and-tweak** path. The dna/theme **engine** locks blend per DNA (`make-composition.cjs` ignores `plan.blend_mode`) — there you use luminance to **pick a fitting identity**, never to recolour ([SKILL.md](../SKILL.md) pre-flight #3, [dna/README.md](../dna/README.md))._
+_Path note: this manual blend pick is the **hand-authored `custom_css`** path. The dna/theme **engine** locks blend per DNA (`make-composition.cjs` ignores `plan.blend_mode`) — there you use luminance to **pick a fitting identity**, never to recolour ([SKILL.md](../SKILL.md) pre-flight #3, [dna/README.md](../dna/README.md))._
 
 ### You animate `letter-spacing` on the word entry.
 
@@ -166,7 +162,7 @@ You'll read this file alone and feel covered. These anti-patterns reference conc
 **Order of reading for a new video**:
 
 1. SKILL.md (decision gate + pipeline + pre-flight probes)
-2. bespoke-vs-presets.md (**first check if a canonical example fits — clone if so**)
+2. bespoke-vs-presets.md (per-group `custom_css` overrides)
 3. layout-heuristics.md (Step 0 embed-viability gate — all 4 wall conditions; then positions, sides, crown, font scale, pillarbox formula)
 4. typography-presets.md (font-size × column-width table, starting points)
 5. caption-grouping.md (word → group)

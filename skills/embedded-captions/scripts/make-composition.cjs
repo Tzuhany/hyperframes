@@ -18,9 +18,6 @@ const fs = require("fs");
 const cp = require("child_process");
 const dnaLib = require("./lib-dna.cjs");
 
-const SKILL_ROOT = path.resolve(__dirname, "..");
-const TEMPLATES = path.join(SKILL_ROOT, "cinematic");
-
 // Source clip duration (seconds) via ffprobe. The COMPOSITION/background length must
 // follow the SOURCE, not the last caption — see the Bug-1 note in main().
 function sourceDurationSec(project) {
@@ -78,16 +75,6 @@ const defaultTextShadow = (c) =>
 const defaultTextFilter = (c) =>
   hexLum(c) < 0.45 ? "contrast(1.08)" : "brightness(1.1) contrast(1.05)";
 
-function findTemplate(name) {
-  const p = path.join(TEMPLATES, name, "template.html");
-  if (fs.existsSync(p)) return p;
-  const avail = fs
-    .readdirSync(TEMPLATES)
-    .filter((d) => fs.existsSync(path.join(TEMPLATES, d, "template.html")))
-    .sort();
-  console.error(`[compile] unknown template: ${name}. Available: ${avail.join(", ")}`);
-  process.exit(1);
-}
 function escBr(t) {
   const e = String(t)
     .replace(/&/g, "&amp;")
@@ -275,9 +262,7 @@ function main() {
         `${tokens.heroes.length ? ` · hero amp ${tokens.heroes.map((h) => h.amp).join("/")} (RMS-coupled)` : ""}`,
     );
   }
-  let src = dna
-    ? fs.readFileSync(path.join(TEMPLATES, "engine.html"), "utf8")
-    : fs.readFileSync(findTemplate(plan.template), "utf8");
+  let src = fs.readFileSync(path.join(__dirname, "cinematic-engine.html"), "utf8");
   // Bug-1: the canvas/background length = SOURCE clip length, NOT the last-caption time.
   // If plan.duration < source, the bg video ends before the matte → the tail shows only
   // the foreground subject on black. Caption groups keep their own in/out (they may end
