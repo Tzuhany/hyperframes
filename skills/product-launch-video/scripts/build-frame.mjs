@@ -22,7 +22,16 @@
 import { copyFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { lum, parseColors, parseFonts, semanticColors } from "./lib/tokens.mjs";
+import {
+  brandRolesFromStats,
+  chroma,
+  lum,
+  parseColors,
+  parseFonts,
+  pickAccent,
+  semanticColors,
+  UA_DEFAULT_COLORS,
+} from "./lib/tokens.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -109,6 +118,7 @@ const hueDist = (a, b) => {
 // ── brand tokens ──────────────────────────────────────────────────────────────
 let brandColors = [];
 let brandFonts = [];
+let brandColorStats = []; // rich per-color usage stats (areaBg / interactiveBg / textCount …)
 if (existsSync(tokensPath)) {
   try {
     const t = JSON.parse(readFileSync(tokensPath, "utf8"));
@@ -121,6 +131,7 @@ if (existsSync(tokensPath)) {
       .map((f) => (typeof f === "string" ? f : (f?.family ?? f?.name ?? "")))
       .map((f) => String(f).split(",")[0].replace(/['"]/g, "").trim())
       .filter(Boolean);
+    brandColorStats = Array.isArray(t.colorStats) ? t.colorStats : [];
   } catch (e) {
     die(`tokens.json parse: ${e.message}`);
   }
@@ -133,20 +144,55 @@ const summary = [];
 // ── color remix ───────────────────────────────────────────────────────────────
 if (brandColors.length && presetColors.length) {
   const pr = semanticColors(presetColors);
-  const br = semanticColors(brandColors.map((h, i) => [`c${i}`, h]));
+  // Brand roles: prefer the function-based reading of capture colorStats (canvas =
+  // largest background, accent = top interactive bg, ink = dominant contrasting text).
+  // Fall back to the legacy luminance/chroma heuristic only when stats are absent —
+  // but pick the accent via pickAccent either way so a UA-default link color never wins.
+  const br =
+    brandRolesFromStats(brandColorStats) ??
+    (() => {
+      // strip UA-default link colors so a stray <a> color can't become ink/canvas/accent
+      const clean = brandColors.filter((h) => !UA_DEFAULT_COLORS.has(h.toUpperCase()));
+      const s = semanticColors(clean.map((h, i) => [`c${i}`, h]));
+      return {
+        ink: s.ink,
+        canvas: s.canvas,
+        accent: pickAccent(brandColorStats, clean, [s.ink, s.canvas]) ?? s.accent,
+        accent2: s.accent2,
+      };
+    })();
+  if (!br.accent) die("accent 选取失败：品牌色里没有可用的强调色");
+  if (chroma(br.accent) <= 40) {
+    console.warn(
+      `  ⚠ accent ${br.accent} 彩度很低 (${chroma(br.accent)}) — 确认这是品牌色而非中性/默认色`,
+    );
+  }
+  // Map by LUMINANCE POLARITY, not by role name: the preset's darker neutral takes the
+  // brand's darker neutral, the lighter takes the lighter. So a dark-ground preset stays
+  // dark and a light-ground preset stays light — both land on the brand's real values,
+  // even when the brand's canvas is dark (dark-mode brand) and ink is light.
+  const darker = (a, b) => ((lum(a) ?? 0) <= (lum(b) ?? 0) ? a : b);
+  const prDark = darker(pr.ink, pr.canvas);
+  const prLight = prDark === pr.ink ? pr.canvas : pr.ink;
+  const brDark = darker(br.ink, br.canvas);
+  const brLight = brDark === br.ink ? br.canvas : br.ink;
   const prAccentHsl = hexToHsl(pr.accent);
   const prAccent2Hsl = hexToHsl(pr.accent2);
   const newByKey = new Map();
   for (const [key, val] of presetColors) {
     const ph = hexToHsl(val);
     let next;
-    if (val === pr.ink) next = br.ink;
-    else if (val === pr.canvas) next = br.canvas;
+    if (val === prDark) next = brDark;
+    else if (val === prLight) next = brLight;
+    else if (val === pr.accent)
+      next = br.accent; // primary accent → the EXACT brand color
+    else if (pr.accent2 !== pr.accent && val === pr.accent2)
+      next = br.accent2; // exact 2nd accent
     else if (!ph)
       next = val; // non-hex (rgba) → leave as-is
     else {
-      // repaint: pick the brand accent whose preset counterpart is nearest in hue,
-      // then keep THIS color's own lightness so tint families stay families.
+      // repaint the remaining tints: pick the brand accent whose preset counterpart is
+      // nearest in hue, then keep THIS color's own lightness so tint families stay families.
       const useSecond =
         pr.accent !== pr.accent2 &&
         prAccentHsl &&
@@ -174,7 +220,8 @@ if (brandColors.length && presetColors.length) {
     })
     .join("\n");
   summary.push(
-    `colors: ink ${pr.ink}→${br.ink}, canvas ${pr.canvas}→${br.canvas}, accent ${pr.accent}→${br.accent} (${newByKey.size}/${presetColors.length} keys repainted)`,
+    `colors: dark ${prDark}→${brDark}, light ${prLight}→${brLight}, accent ${pr.accent}→${br.accent}` +
+      ` (${newByKey.size}/${presetColors.length} keys repainted${brandColorStats.length ? ", via colorStats" : ""})`,
   );
 } else {
   summary.push(

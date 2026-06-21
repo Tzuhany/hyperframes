@@ -31,7 +31,7 @@
 // Grouping mirrors the proven heuristics (frame boundary · sentence-end punct ·
 // silence gap · density-aware word cap); word timings come inline from audio_meta.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { parseStoryboard } from "./lib/storyboard.mjs";
 import { captionBand, parseFormat } from "./lib/dimensions.mjs";
@@ -167,9 +167,21 @@ function runBuild(argv) {
   let source;
   if (existsSync(skinPath)) {
     const tokens = frameTokensCss(framePath, H);
+    const faces = brandFontFaces(framePath, hyperframesDir);
+    const fonts = existsSync(framePath) ? parseFonts(readFileSync(framePath, "utf8")) : {};
     writeFileSync(
       htmlPath,
-      buildFromSkin(readFileSync(skinPath, "utf8"), finalized, total, W, H, tokens, die),
+      buildFromSkin(
+        readFileSync(skinPath, "utf8"),
+        finalized,
+        total,
+        W,
+        H,
+        tokens,
+        die,
+        faces,
+        fonts,
+      ),
     );
     source = `preset skin (${skinPath.replace(hyperframesDir + "/", "")})`;
   } else {
@@ -189,19 +201,46 @@ function runBuild(argv) {
 // Fill the skin's three reserved holes + the root's 0-placeholders, then wrap the
 // fragment in a <template> (the engine clones template contents only). One generic
 // fill works for every preset's skin — no per-skin transform.
-function buildFromSkin(skin, groups, total, W, H, tokens, die) {
+//
+// Every preset's skin is authored against ITS OWN fonts/metrics (broadside→Barlow @
+// line-height 1.02, capsule→Bodoni, …). When the project's brand font differs (it
+// almost always does), three things must be reconciled so ANY skin renders correctly
+// for ANY brand — done here generically, not per-project:
+//   · @font-face for the brand fonts (else the renderer can't supply them → fallback)
+//   · the skin's preset-font FALLBACK literals (var(--font-x, "Barlow")) repointed to
+//     the brand family, so no undeclared font name trips font_family_without_font_face
+//   · a metric safety net: a heavier brand font overflows a tight preset line-height,
+//     so the active-word highlight clips — a line-height floor + word padding fixes it
+//   · data-composition-id + dimensions on the <template> root (skins lead with
+//     <script>/<style>, so the root element must carry the id, not the first child)
+function buildFromSkin(skin, groups, total, W, H, tokens, die, faces = "", fonts = {}) {
   const fillOnce = (src, re, repl, label) => {
     const n = (src.match(re) || []).length;
     if (n !== 1) die(`caption-skin.html: expected exactly one ${label}, found ${n}`);
     return src.replace(re, () => repl);
   };
   let out = skin;
+  // Strip HTML doc-comments first. A skin's authoring comment can contain tag-like text
+  // (broadside's literally says "<template>"), which the linter's tag scanner then picks
+  // up as the root element → false root_missing_composition_id / root_missing_dimensions.
+  // The comments are preview/authoring docs, not needed in the generated composition.
+  out = out.replace(/<!--[\s\S]*?-->/g, "");
+  // brand :root tokens + @font-face for the brand fonts, both into the reserved hole
   out = fillOnce(
     out,
     /<style data-brand-tokens>\s*<\/style>/,
-    `<style data-brand-tokens>\n${tokens}\n    </style>`,
+    `<style data-brand-tokens>\n${faces ? faces + "\n" : ""}${tokens}\n    </style>`,
     "<style data-brand-tokens></style> hole",
   );
+  // Resolve the skin's font-family var()s to the brand family LITERAL. Two reasons:
+  //  (1) the linter's used-font scanner naively comma-splits, so var(--x, "Brand") yields
+  //      junk tokens ('var(--x', 'brand")') that never match the @font-face → a false
+  //      font_family_without_font_face; a plain "Brand" literal matches the @font-face.
+  //  (2) it drops the preset's own fallback name (Barlow / IBM Plex Mono / …), which has
+  //      no @font-face in this project. The :root token stays for any other consumer.
+  if (fonts.display)
+    out = out.replace(/var\(\s*--font-display\s*(?:,\s*"[^"]*"\s*)?\)/g, fonts.display);
+  if (fonts.body) out = out.replace(/var\(\s*--font-body\s*(?:,\s*"[^"]*"\s*)?\)/g, fonts.body);
   out = fillOnce(
     out,
     /var GROUPS = \[\];/,
@@ -212,7 +251,73 @@ function buildFromSkin(skin, groups, total, W, H, tokens, die) {
   out = fillOnce(out, /data-duration="0"/, `data-duration="${total}"`, '`data-duration="0"` hole');
   out = fillOnce(out, /data-width="0"/, `data-width="${W}"`, '`data-width="0"` hole');
   out = fillOnce(out, /data-height="0"/, `data-height="${H}"`, '`data-height="0"` hole');
-  return `<template id="captions-template">\n${out.trim()}\n</template>\n`;
+  // font-robust safety net — appended last so it wins the cascade over the skin's own
+  // (preset-font-tuned) line-height. Kept SNUG (1.1) so the plate hugs the text. NO extra
+  // word/pill padding: inspect's `text_box_overflow` on the highlight words is a cosmetic
+  // false-positive here (heavy-glyph ink slightly exceeds the line box, but there's no
+  // overflow:hidden — nothing is clipped); zeroing it would need an airy line-height that
+  // balloons the pill, which is worse. Override only if a brand font genuinely clips.
+  out += "\n<style>\n  .caption-line { line-height: 1.1 !important; }\n</style>";
+  return `<template id="captions-template" data-composition-id="captions" data-width="${W}" data-height="${H}">\n${out.trim()}\n</template>\n`;
+}
+
+// @font-face for the brand display/body fonts, matched from the project's font dirs
+// (staged assets/fonts first, else capture/assets/fonts) by family-name prefix, with
+// weight parsed from the filename. Paths are relative to compositions/captions.html.
+// Returns "" when frame.md or font files are absent (then the skin's fallback applies).
+function brandFontFaces(framePath, hyperframesDir) {
+  if (!existsSync(framePath)) return "";
+  const { display, body } = parseFonts(readFileSync(framePath, "utf8"));
+  const families = [
+    ...new Set([display, body].filter(Boolean).map((f) => f.replace(/^"|"$/g, ""))),
+  ];
+  if (!families.length) return "";
+  const dirs = [
+    { abs: join(hyperframesDir, "assets/fonts"), rel: "../assets/fonts" },
+    { abs: join(hyperframesDir, "capture/assets/fonts"), rel: "../capture/assets/fonts" },
+  ].filter((d) => existsSync(d.abs));
+  const weightOf = (n) => {
+    const s = n.toLowerCase();
+    if (/black|heavy|ultra|extrabold/.test(s)) return 800;
+    if (/bold/.test(s)) return 700;
+    if (/semibold|demibold/.test(s)) return 600;
+    if (/medium/.test(s)) return 500;
+    if (/light|thin/.test(s)) return 300;
+    return 400; // book / regular / roman
+  };
+  const fmtOf = (f) =>
+    /\.woff2$/i.test(f)
+      ? "woff2"
+      : /\.woff$/i.test(f)
+        ? "woff"
+        : /\.ttf$/i.test(f)
+          ? "truetype"
+          : "opentype";
+  const faces = [];
+  const seen = new Set();
+  for (const fam of families) {
+    const key = fam.replace(/\s+/g, "").toLowerCase();
+    for (const d of dirs) {
+      let files = [];
+      try {
+        files = readdirSync(d.abs);
+      } catch {
+        continue;
+      }
+      for (const f of files.sort()) {
+        if (!/\.(woff2|woff|ttf|otf)$/i.test(f)) continue;
+        if (!f.replace(/\s+/g, "").toLowerCase().startsWith(key)) continue;
+        const w = weightOf(f);
+        const dedup = `${fam}-${w}`;
+        if (seen.has(dedup)) continue; // one src per weight; assets/fonts wins over capture
+        seen.add(dedup);
+        faces.push(
+          `      @font-face { font-family: '${fam}'; src: url('${d.rel}/${f}') format('${fmtOf(f)}'); font-weight: ${w}; font-display: block; }`,
+        );
+      }
+    }
+  }
+  return faces.join("\n");
 }
 
 // frame.md colors:/typography: → a :root token block, mapped to the fixed semantic
