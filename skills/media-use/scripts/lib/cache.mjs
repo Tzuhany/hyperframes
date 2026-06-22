@@ -8,7 +8,7 @@ import {
 import { join, basename } from "node:path";
 import { createHash } from "node:crypto";
 import { homedir } from "node:os";
-import { readManifest } from "./manifest.mjs";
+import { readManifest, appendRecord } from "./manifest.mjs";
 
 const SCHEMA_PREFIX = "mu-v1-";
 const KEY_HEX_CHARS = 16;
@@ -36,69 +36,32 @@ function markComplete(entryDir) {
 }
 
 function readGlobalManifest() {
-  const dir = globalMediaDir();
-  const p = join(dir, "manifest.jsonl");
-  if (!existsSync(p)) return [];
-  const raw = readFileSync(p, "utf8");
-  const records = [];
-  for (const line of raw.split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    try {
-      records.push(JSON.parse(trimmed));
-    } catch {
-      // skip malformed
-    }
-  }
-  return records;
+  return readManifest(globalMediaDir());
 }
 
-function appendGlobalRecord(record) {
-  const dir = globalMediaDir();
-  mkdirSync(dir, { recursive: true });
-  const p = join(dir, "manifest.jsonl");
-  const line = JSON.stringify(record) + "\n";
-  if (existsSync(p)) {
-    const existing = readFileSync(p, "utf8");
-    const sep = existing.length > 0 && !existing.endsWith("\n") ? "\n" : "";
-    writeFileSync(p, existing + sep + line);
-  } else {
-    writeFileSync(p, line);
-  }
+function validateCacheHit(match) {
+  if (!match?.sha) return null;
+  return isComplete(cacheEntryDir(globalMediaDir(), match.sha)) ? match : null;
 }
 
 export function cacheGet(prompt, type) {
-  const records = readGlobalManifest();
-  const match = records.find(
-    (r) =>
-      r.reusable &&
-      r.provenance?.prompt === prompt &&
-      (type == null || r.type === type),
+  return validateCacheHit(
+    readGlobalManifest().find(
+      (r) =>
+        r.reusable &&
+        r.provenance?.prompt === prompt &&
+        (type == null || r.type === type),
+    ),
   );
-  if (!match) return null;
-
-  const sha = match.sha;
-  if (!sha) return null;
-  const entryDir = cacheEntryDir(globalMediaDir(), sha);
-  if (!isComplete(entryDir)) return null;
-
-  return match;
 }
 
 export function cacheGetByEntity(entity) {
   const lower = entity.toLowerCase();
-  const records = readGlobalManifest();
-  const match = records.find(
-    (r) => r.reusable && r.entity && r.entity.toLowerCase() === lower,
+  return validateCacheHit(
+    readGlobalManifest().find(
+      (r) => r.reusable && r.entity && r.entity.toLowerCase() === lower,
+    ),
   );
-  if (!match) return null;
-
-  const sha = match.sha;
-  if (!sha) return null;
-  const entryDir = cacheEntryDir(globalMediaDir(), sha);
-  if (!isComplete(entryDir)) return null;
-
-  return match;
 }
 
 export function cachePut(filePath, record) {
@@ -117,7 +80,7 @@ export function cachePut(filePath, record) {
     reusable: true,
     cached_path: dest,
   };
-  appendGlobalRecord(globalRecord);
+  appendRecord(globalMediaDir(), globalRecord);
   return { sha, cached_path: dest };
 }
 

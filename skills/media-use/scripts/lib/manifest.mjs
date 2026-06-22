@@ -25,10 +25,14 @@ export function indexPath(projectDir) {
   return join(mediaDir(projectDir), INDEX_FILE);
 }
 
-export function typeDirPath(projectDir, type) {
+export function typeSubdir(type) {
   const sub = TYPE_DIRS[type];
   if (!sub) throw new Error(`unknown media type: ${type}`);
-  return join(mediaDir(projectDir), sub);
+  return sub;
+}
+
+export function typeDirPath(projectDir, type) {
+  return join(mediaDir(projectDir), typeSubdir(type));
 }
 
 export function readManifest(projectDir) {
@@ -85,7 +89,7 @@ export function findByEntity(projectDir, entity) {
 
 export function nextId(projectDir, type) {
   const records = readManifest(projectDir);
-  const prefix = type === "voice" ? "voice" : type;
+  const prefix = type;
   let max = 0;
   for (const r of records) {
     if (r.type !== type) continue;

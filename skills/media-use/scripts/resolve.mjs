@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
 import { existsSync } from "node:fs";
-import { resolve, join } from "node:path";
+import { resolve, join, extname } from "node:path";
 import { parseArgs } from "node:util";
 import {
   appendRecord,
   findByPrompt,
   findByEntity,
   nextId,
+  typeSubdir,
 } from "./lib/manifest.mjs";
 import { regenerateIndex } from "./lib/index-gen.mjs";
 import {
@@ -77,7 +78,7 @@ async function run() {
   const cacheHit = cacheGet(intent, type);
   if (cacheHit) {
     const id = nextId(projectDir, type);
-    const ext = extFromCachedPath(cacheHit.cached_path);
+    const ext = extname(cacheHit.cached_path);
     const localPath = `.media/${typeSubdir(type)}/${id}${ext}`;
     const imported = importFromCache(cacheHit, projectDir, id, localPath);
     if (imported) {
@@ -91,7 +92,7 @@ async function run() {
     const entityCacheHit = cacheGetByEntity(entity);
     if (entityCacheHit && entityCacheHit.type === type) {
       const id = nextId(projectDir, type);
-      const ext = extFromCachedPath(entityCacheHit.cached_path);
+      const ext = extname(entityCacheHit.cached_path);
       const localPath = `.media/${typeSubdir(type)}/${id}${ext}`;
       const imported = importFromCache(entityCacheHit, projectDir, id, localPath);
       if (imported) {
@@ -186,45 +187,18 @@ function formatMeta(record, source) {
   return parts.join(", ");
 }
 
-function typeSubdir(type) {
-  const map = {
-    bgm: "audio/bgm",
-    sfx: "audio/sfx",
-    voice: "audio/voice",
-    image: "images",
-    icon: "images",
-    brand: "images",
-  };
-  return map[type] || type;
-}
-
 function extFromUrl(url) {
   try {
-    const pathname = new URL(url).pathname;
-    const dot = pathname.lastIndexOf(".");
-    if (dot >= 0) return pathname.slice(dot);
+    return extname(new URL(url).pathname) || null;
   } catch {
-    // not a valid URL
+    return null;
   }
-  return null;
 }
 
-function extFromCachedPath(cachedPath) {
-  if (!cachedPath) return defaultExt("bgm");
-  const dot = cachedPath.lastIndexOf(".");
-  return dot >= 0 ? cachedPath.slice(dot) : "";
-}
+const DEFAULT_EXT = { bgm: ".wav", sfx: ".mp3", voice: ".wav", image: ".jpg", icon: ".svg", brand: ".png" };
 
 function defaultExt(type) {
-  const map = {
-    bgm: ".wav",
-    sfx: ".mp3",
-    voice: ".wav",
-    image: ".jpg",
-    icon: ".svg",
-    brand: ".png",
-  };
-  return map[type] || ".bin";
+  return DEFAULT_EXT[type] || ".bin";
 }
 
 run().catch((err) => {
