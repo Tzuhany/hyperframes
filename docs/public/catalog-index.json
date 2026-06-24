@@ -1,5 +1,33 @@
 [
     {
+        "name": "accordion",
+        "type": "component",
+        "title": "Accordion",
+        "description": "An accordion primitive with animated content reveal, chevron rotation, and stacked trigger rows",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "accordion",
+            "disclosure"
+        ],
+        "href": "/catalog/components/accordion",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/accordion.png"
+    },
+    {
+        "name": "alert-dialog",
+        "type": "component",
+        "title": "Alert Dialog",
+        "description": "A destructive-action alert dialog primitive with overlay, warning icon, copy, and action row",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "alert-dialog",
+            "overlay"
+        ],
+        "href": "/catalog/components/alert-dialog",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/alert-dialog.png"
+    },
+    {
         "name": "app-showcase",
         "type": "block",
         "title": "App Showcase",
@@ -28,6 +56,20 @@
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/blocks/apple-money-count.png"
     },
     {
+        "name": "badge-pop",
+        "type": "component",
+        "title": "Badge Pop",
+        "description": "A transitions.dev-inspired notification badge pop with elastic scale and count reveal",
+        "tags": [
+            "transition-primitive",
+            "transitions-dev-port",
+            "badge",
+            "microinteraction"
+        ],
+        "href": "/catalog/components/badge-pop",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/badge-pop.png"
+    },
+    {
         "name": "blue-sweater-intro-video",
         "type": "block",
         "title": "Blue Sweater Intro Video",
@@ -42,6 +84,20 @@
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/blocks/blue-sweater-intro-video.png"
     },
     {
+        "name": "blur-in",
+        "type": "component",
+        "title": "Blur In",
+        "description": "A blur-in text primitive with word-level focus resolve for product reveal moments",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "blur-in",
+            "text-effect"
+        ],
+        "href": "/catalog/components/blur-in",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/blur-in.png"
+    },
+    {
         "name": "bottom-up-letters",
         "type": "component",
         "title": "Bottom Up Letters",
@@ -54,6 +110,20 @@
         ],
         "href": "/catalog/components/bottom-up-letters",
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/bottom-up-letters.png"
+    },
+    {
+        "name": "button",
+        "type": "component",
+        "title": "Button",
+        "description": "A video-safe shadcn-style button primitive with hover, press, loading, and success states",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "button",
+            "control"
+        ],
+        "href": "/catalog/components/button",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/button.png"
     },
     {
         "name": "caption-blend-difference",
@@ -291,6 +361,48 @@
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/caption-weight-shift.png"
     },
     {
+        "name": "card-resize",
+        "type": "component",
+        "title": "Card Resize",
+        "description": "A transitions.dev-inspired card resize primitive that expands a compact card into a detail panel",
+        "tags": [
+            "transition-primitive",
+            "transitions-dev-port",
+            "card",
+            "layout"
+        ],
+        "href": "/catalog/components/card-resize",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/card-resize.png"
+    },
+    {
+        "name": "caret",
+        "type": "component",
+        "title": "Caret",
+        "description": "A typing caret primitive with deterministic blink and typed-value reveal",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "caret",
+            "typing"
+        ],
+        "href": "/catalog/components/caret",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/caret.png"
+    },
+    {
+        "name": "checkbox",
+        "type": "component",
+        "title": "Checkbox",
+        "description": "A checkbox primitive with unchecked, checked, and label reveal states for product UI scenes",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "checkbox",
+            "control"
+        ],
+        "href": "/catalog/components/checkbox",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/checkbox.png"
+    },
+    {
         "name": "chromatic-radial-split",
         "type": "block",
         "title": "Chromatic Radial Split",
@@ -315,6 +427,48 @@
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/blocks/cinematic-zoom.png"
     },
     {
+        "name": "combobox",
+        "type": "component",
+        "title": "Combobox",
+        "description": "A combobox primitive with search trigger, filtered option list, and selected-row highlight",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "combobox",
+            "control"
+        ],
+        "href": "/catalog/components/combobox",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/combobox.png"
+    },
+    {
+        "name": "command-menu",
+        "type": "component",
+        "title": "Command Menu",
+        "description": "A command palette primitive with search row, grouped actions, and selected command highlight",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "command-menu",
+            "overlay"
+        ],
+        "href": "/catalog/components/command-menu",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/command-menu.png"
+    },
+    {
+        "name": "context-menu",
+        "type": "component",
+        "title": "Context Menu",
+        "description": "A context menu primitive with pointer anchor, item stagger, shortcut hints, and selected state",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "context-menu",
+            "menu"
+        ],
+        "href": "/catalog/components/context-menu",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/context-menu.png"
+    },
+    {
         "name": "cross-warp-morph",
         "type": "block",
         "title": "Cross Warp Morph",
@@ -325,6 +479,20 @@
         ],
         "href": "/catalog/blocks/cross-warp-morph",
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/blocks/cross-warp-morph.png"
+    },
+    {
+        "name": "cursor",
+        "type": "component",
+        "title": "Cursor",
+        "description": "A cursor primitive with pointer travel, click ripple, and label callout for guided product demos",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "cursor",
+            "pointer"
+        ],
+        "href": "/catalog/components/cursor",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/cursor.png"
     },
     {
         "name": "data-chart",
@@ -340,6 +508,20 @@
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/blocks/data-chart.png"
     },
     {
+        "name": "dialog",
+        "type": "component",
+        "title": "Dialog",
+        "description": "A centered modal dialog primitive with overlay, title, description, and action row",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "dialog",
+            "overlay"
+        ],
+        "href": "/catalog/components/dialog",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/dialog.png"
+    },
+    {
         "name": "domain-warp-dissolve",
         "type": "block",
         "title": "Domain Warp Dissolve",
@@ -350,6 +532,34 @@
         ],
         "href": "/catalog/blocks/domain-warp-dissolve",
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/blocks/domain-warp-dissolve.png"
+    },
+    {
+        "name": "drawer",
+        "type": "component",
+        "title": "Drawer",
+        "description": "A bottom drawer primitive with handle, stacked rows, and spring-like slide-in motion",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "drawer",
+            "overlay"
+        ],
+        "href": "/catalog/components/drawer",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/drawer.png"
+    },
+    {
+        "name": "dropdown-menu",
+        "type": "component",
+        "title": "Dropdown Menu",
+        "description": "A dropdown menu primitive with trigger press, menu scale, item stagger, and keyboard-focus styling",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "dropdown-menu",
+            "menu"
+        ],
+        "href": "/catalog/components/dropdown-menu",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/dropdown-menu.png"
     },
     {
         "name": "dynamic-grid",
@@ -471,6 +681,36 @@
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/inline-highlight.png"
     },
     {
+        "name": "menu-morph",
+        "type": "component",
+        "title": "Menu Morph",
+        "description": "A transitions.dev-inspired hamburger and plus-menu morph primitive for compact action menus",
+        "tags": [
+            "transition-primitive",
+            "transitions-dev-port",
+            "menu",
+            "morph"
+        ],
+        "href": "/catalog/components/menu-morph",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/menu-morph.png"
+    },
+    {
+        "name": "micro-transitions",
+        "type": "component",
+        "title": "Micro Transitions",
+        "description": "A transitions.dev-inspired pack of badge, dropdown, modal, tabs, tooltip, and success-check micro transitions",
+        "tags": [
+            "transition-primitive",
+            "motion-primitive",
+            "transitions-dev-port",
+            "ui",
+            "transition",
+            "microinteraction"
+        ],
+        "href": "/catalog/components/micro-transitions",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/micro-transitions.png"
+    },
+    {
         "name": "motion-blur",
         "type": "component",
         "title": "Motion Blur",
@@ -484,6 +724,34 @@
         ],
         "href": "/catalog/components/motion-blur",
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/motion-blur.png"
+    },
+    {
+        "name": "input",
+        "type": "component",
+        "title": "Input",
+        "description": "A video-safe text field primitive with label, helper text, focus ring, and typed value reveal",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "input",
+            "field"
+        ],
+        "href": "/catalog/components/input",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/input.png"
+    },
+    {
+        "name": "input-feedback",
+        "type": "component",
+        "title": "Input Feedback",
+        "description": "A transitions.dev-inspired input feedback primitive with shake, clear affordance, and success state",
+        "tags": [
+            "transition-primitive",
+            "transitions-dev-port",
+            "input",
+            "feedback"
+        ],
+        "href": "/catalog/components/input-feedback",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/input-feedback.png"
     },
     {
         "name": "instagram-follow",
@@ -666,6 +934,20 @@
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/blocks/nyc-paris-flight.png"
     },
     {
+        "name": "page-slide",
+        "type": "component",
+        "title": "Page Slide",
+        "description": "A transitions.dev-inspired page slide primitive with outgoing and incoming panels",
+        "tags": [
+            "transition-primitive",
+            "transitions-dev-port",
+            "page",
+            "slide"
+        ],
+        "href": "/catalog/components/page-slide",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/page-slide.png"
+    },
+    {
         "name": "parallax-unzoom",
         "type": "component",
         "title": "Parallax Unzoom",
@@ -697,6 +979,48 @@
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/parallax-zoom.png"
     },
     {
+        "name": "popover",
+        "type": "component",
+        "title": "Popover",
+        "description": "A small anchored popover primitive with origin-aware scale and content fade for inline controls",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "popover",
+            "overlay"
+        ],
+        "href": "/catalog/components/popover",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/popover.png"
+    },
+    {
+        "name": "progress",
+        "type": "component",
+        "title": "Progress",
+        "description": "A progress bar primitive with label, percentage text, and deterministic fill animation",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "progress",
+            "status"
+        ],
+        "href": "/catalog/components/progress",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/progress.png"
+    },
+    {
+        "name": "radio",
+        "type": "component",
+        "title": "Radio Group",
+        "description": "A radio group primitive with animated selection ring and active label emphasis",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "radio",
+            "control"
+        ],
+        "href": "/catalog/components/radio",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/radio.png"
+    },
+    {
         "name": "reddit-post",
         "type": "block",
         "title": "Reddit Post Card",
@@ -708,6 +1032,20 @@
         ],
         "href": "/catalog/blocks/reddit-post",
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/blocks/reddit-post.png"
+    },
+    {
+        "name": "resizable",
+        "type": "component",
+        "title": "Resizable",
+        "description": "A resizable panels primitive with animated split, drag handle, and content emphasis",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "resizable",
+            "layout"
+        ],
+        "href": "/catalog/components/resizable",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/resizable.png"
     },
     {
         "name": "ridged-burn",
@@ -746,6 +1084,34 @@
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/blocks/sdf-iris.png"
     },
     {
+        "name": "select",
+        "type": "component",
+        "title": "Select",
+        "description": "A select primitive with trigger, animated menu, option rows, and active option highlight",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "select",
+            "control"
+        ],
+        "href": "/catalog/components/select",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/select.png"
+    },
+    {
+        "name": "sheet",
+        "type": "component",
+        "title": "Sheet",
+        "description": "A side sheet primitive with overlay, title stack, and right-edge slide transition",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "sheet",
+            "overlay"
+        ],
+        "href": "/catalog/components/sheet",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/sheet.png"
+    },
+    {
         "name": "shimmer-sweep",
         "type": "component",
         "title": "Shimmer Sweep",
@@ -772,6 +1138,34 @@
         ],
         "href": "/catalog/components/simulated-cursor",
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/simulated-cursor.png"
+    },
+    {
+        "name": "skeleton",
+        "type": "component",
+        "title": "Skeleton",
+        "description": "A loading skeleton primitive with shimmer sweep and reveal-ready rows for app mockups",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "skeleton",
+            "loading"
+        ],
+        "href": "/catalog/components/skeleton",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/skeleton.png"
+    },
+    {
+        "name": "slider",
+        "type": "component",
+        "title": "Slider",
+        "description": "A slider primitive with animated fill, thumb travel, and value readout for controls and settings scenes",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "slider",
+            "control"
+        ],
+        "href": "/catalog/components/slider",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/slider.png"
     },
     {
         "name": "soft-blur-in",
@@ -804,6 +1198,20 @@
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/blocks/spain-map.png"
     },
     {
+        "name": "spinner",
+        "type": "component",
+        "title": "Spinner",
+        "description": "A deterministic loading spinner primitive with ring, sweep, and optional status label",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "spinner",
+            "loading"
+        ],
+        "href": "/catalog/components/spinner",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/spinner.png"
+    },
+    {
         "name": "spotify-card",
         "type": "block",
         "title": "Spotify Now Playing",
@@ -817,6 +1225,20 @@
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/blocks/spotify-card.png"
     },
     {
+        "name": "stepper",
+        "type": "component",
+        "title": "Stepper",
+        "description": "A stepper primitive with numbered milestones, connector progress, and active-step emphasis",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "stepper",
+            "progress"
+        ],
+        "href": "/catalog/components/stepper",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/stepper.png"
+    },
+    {
         "name": "swirl-vortex",
         "type": "block",
         "title": "Swirl Vortex",
@@ -827,6 +1249,48 @@
         ],
         "href": "/catalog/blocks/swirl-vortex",
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/blocks/swirl-vortex.png"
+    },
+    {
+        "name": "switch",
+        "type": "component",
+        "title": "Switch",
+        "description": "A toggle switch primitive with track, thumb, and on/off state animation",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "switch",
+            "toggle"
+        ],
+        "href": "/catalog/components/switch",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/switch.png"
+    },
+    {
+        "name": "tabs",
+        "type": "component",
+        "title": "Tabs",
+        "description": "A tab primitive with segmented triggers, animated indicator, and active panel state",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "tabs",
+            "navigation"
+        ],
+        "href": "/catalog/components/tabs",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/tabs.png"
+    },
+    {
+        "name": "text-stagger",
+        "type": "component",
+        "title": "Text Stagger",
+        "description": "A transitions.dev-inspired text stagger primitive with enter, shimmer, and exit-ready words",
+        "tags": [
+            "transition-primitive",
+            "transitions-dev-port",
+            "text",
+            "stagger"
+        ],
+        "href": "/catalog/components/text-stagger",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/text-stagger.png"
     },
     {
         "name": "texture-mask-text",
@@ -866,6 +1330,62 @@
         ],
         "href": "/catalog/blocks/tiktok-follow",
         "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/blocks/tiktok-follow.png"
+    },
+    {
+        "name": "tilt-card",
+        "type": "component",
+        "title": "Tilt Card",
+        "description": "A transitions.dev-inspired tilt card primitive with depth layers and hover-style parallax",
+        "tags": [
+            "transition-primitive",
+            "transitions-dev-port",
+            "card",
+            "tilt"
+        ],
+        "href": "/catalog/components/tilt-card",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/tilt-card.png"
+    },
+    {
+        "name": "toast",
+        "type": "component",
+        "title": "Toast",
+        "description": "A toast notification primitive with slide-in, status dot, progress rail, and exit variables",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "toast",
+            "notification"
+        ],
+        "href": "/catalog/components/toast",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/toast.png"
+    },
+    {
+        "name": "toggle-group",
+        "type": "component",
+        "title": "Toggle Group",
+        "description": "A segmented toggle group primitive with sliding active background and icon/text buttons",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "toggle-group",
+            "control"
+        ],
+        "href": "/catalog/components/toggle-group",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/toggle-group.png"
+    },
+    {
+        "name": "tooltip",
+        "type": "component",
+        "title": "Tooltip",
+        "description": "A tooltip primitive with trigger, floating label, arrow, and reveal animation",
+        "tags": [
+            "ui-primitive",
+            "remocn-port",
+            "tooltip",
+            "overlay"
+        ],
+        "href": "/catalog/components/tooltip",
+        "preview": "https://static.heygen.ai/hyperframes-oss/docs/images/catalog/components/tooltip.png"
     },
     {
         "name": "tracking-in",

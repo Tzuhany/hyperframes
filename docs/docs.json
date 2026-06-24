@@ -239,6 +239,53 @@
             ]
           },
           {
+            "group": "UI Primitives",
+            "pages": [
+              "catalog/components/accordion",
+              "catalog/components/alert-dialog",
+              "catalog/components/blur-in",
+              "catalog/components/button",
+              "catalog/components/caret",
+              "catalog/components/checkbox",
+              "catalog/components/combobox",
+              "catalog/components/command-menu",
+              "catalog/components/context-menu",
+              "catalog/components/cursor",
+              "catalog/components/dialog",
+              "catalog/components/drawer",
+              "catalog/components/dropdown-menu",
+              "catalog/components/input",
+              "catalog/components/popover",
+              "catalog/components/progress",
+              "catalog/components/radio",
+              "catalog/components/resizable",
+              "catalog/components/select",
+              "catalog/components/sheet",
+              "catalog/components/skeleton",
+              "catalog/components/slider",
+              "catalog/components/spinner",
+              "catalog/components/stepper",
+              "catalog/components/switch",
+              "catalog/components/tabs",
+              "catalog/components/toast",
+              "catalog/components/toggle-group",
+              "catalog/components/tooltip"
+            ]
+          },
+          {
+            "group": "Transition Primitives",
+            "pages": [
+              "catalog/components/badge-pop",
+              "catalog/components/card-resize",
+              "catalog/components/input-feedback",
+              "catalog/components/menu-morph",
+              "catalog/components/micro-transitions",
+              "catalog/components/page-slide",
+              "catalog/components/text-stagger",
+              "catalog/components/tilt-card"
+            ]
+          },
+          {
             "group": "Motion Primitives",
             "pages": [
               "catalog/components/bottom-up-letters",

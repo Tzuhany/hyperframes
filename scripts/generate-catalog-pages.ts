@@ -527,11 +527,13 @@ function main(): void {
     "CSS Transitions": 5,
     Showcases: 6,
     Data: 7,
-    "Motion Primitives": 8,
-    "Text Effects": 9,
-    Effects: 10,
-    Blocks: 11,
-    "Code Snippets": 12,
+    "UI Primitives": 8,
+    "Transition Primitives": 9,
+    "Motion Primitives": 10,
+    "Text Effects": 11,
+    Effects: 12,
+    Blocks: 13,
+    "Code Snippets": 14,
   };
 
   // fallow-ignore-next-line complexity
@@ -545,6 +547,8 @@ function main(): void {
     // Code animations (morph, flight, diff, …) — keyed on the code-animation tag so
     // they group separately from the static code-snippet themes.
     if (tags.includes("code-animation")) return "Code Animations";
+    if (tags.includes("ui-primitive")) return "UI Primitives";
+    if (tags.includes("transition-primitive")) return "Transition Primitives";
     if (tags.includes("motion-primitive")) return "Motion Primitives";
     if (tags.includes("text-effect")) return "Text Effects";
     if (entry.name.startsWith("code-snippet-")) return "Code Snippets";

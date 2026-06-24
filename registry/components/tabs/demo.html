@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Tabs - Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+      #demo {
+        width: 1920px;
+        height: 1080px;
+        display: grid;
+        place-items: center;
+        background: #f6f7fb;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      .hf-ui-tabs {
+        --hf-tabs-index: 0;
+        display: grid;
+        gap: 28px;
+        width: 680px;
+        color: #18181b;
+      }
+      .hf-ui-tabs-list {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 8px;
+        border-radius: 22px;
+        background: #e9eaee;
+      }
+      .hf-ui-tabs-indicator {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        width: calc((100% - 16px) / 2);
+        height: calc(100% - 16px);
+        border-radius: 16px;
+        background: white;
+        transform: translateX(calc(var(--hf-tabs-index) * 100%));
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+      }
+      .hf-ui-tabs-trigger {
+        position: relative;
+        z-index: 1;
+        height: 74px;
+        border: 0;
+        background: transparent;
+        color: #52525b;
+        font:
+          850 26px/1 Inter,
+          system-ui,
+          sans-serif;
+      }
+      .hf-ui-tabs-panel {
+        display: grid;
+        gap: 10px;
+        padding: 36px;
+        border: 1px solid #e4e4e7;
+        border-radius: 26px;
+        background: white;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.1);
+      }
+      .hf-ui-tabs-kicker {
+        color: #71717a;
+        font-size: 22px;
+        font-weight: 800;
+      }
+      .hf-ui-tabs-panel strong {
+        font-size: 38px;
+        line-height: 1.1;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="demo"
+      data-composition-id="tabs-demo"
+      data-start="0"
+      data-width="1920"
+      data-height="1080"
+      data-duration="5"
+    >
+      <div class="hf-ui-tabs">
+        <div class="hf-ui-tabs-list">
+          <span class="hf-ui-tabs-indicator"></span>
+          <button class="hf-ui-tabs-trigger" type="button">Preview</button>
+          <button class="hf-ui-tabs-trigger" type="button">Exports</button>
+        </div>
+        <div class="hf-ui-tabs-panel">
+          <span class="hf-ui-tabs-kicker">Preview ready</span><strong>12 scenes assembled</strong>
+        </div>
+      </div>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        tl.to(".hf-ui-tabs", { "--hf-tabs-index": 1, duration: 0.42, ease: "power3.out" }, 0.85);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["tabs-demo"] = tl;
+      </script>
+    </div>
+  </body>
+</html>

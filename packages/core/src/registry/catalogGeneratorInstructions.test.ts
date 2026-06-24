@@ -18,6 +18,16 @@ describe("catalog generator texture instructions", () => {
 });
 
 describe("catalog generator motion primitives group", () => {
+  it("groups shadcn-style remocn UI primitives before motion primitives", () => {
+    expect(generatorSource).toContain('"UI Primitives"');
+    expect(generatorSource).toContain('tags.includes("ui-primitive")');
+  });
+
+  it("groups transitions.dev-style microinteractions before broader motion primitives", () => {
+    expect(generatorSource).toContain('"Transition Primitives"');
+    expect(generatorSource).toContain('tags.includes("transition-primitive")');
+  });
+
   it("groups web-native motion primitive components before generic effects", () => {
     expect(generatorSource).toContain('"Motion Primitives"');
     expect(generatorSource).toContain('tags.includes("motion-primitive")');
