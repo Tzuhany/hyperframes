@@ -391,6 +391,9 @@ function wrapTimeline(real: GsapTimeline): TimelineProxy {
 if (typeof window !== "undefined") {
   if (!window.__hf) window.__hf = {};
   window.__hfTimelinesBuilding = false;
+  // Expose a synchronous flush so headless renderers can drain the queue
+  // instantly instead of waiting for rAF-based batch ticks.
+  (window as Record<string, unknown>).__hfFlushSync = flushPendingOperations;
 
   // Intercept window.gsap assignment via a property trap so we can wrap
   // `gsap.timeline()` before any user script calls it. GSAP is not yet
