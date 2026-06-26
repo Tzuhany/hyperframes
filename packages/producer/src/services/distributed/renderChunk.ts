@@ -194,8 +194,7 @@ function rebuildExtractedFramesFromPlanDir(
     for (let i = 0; i < frames.length; i++) {
       const frameName = frames[i];
       if (!frameName) continue;
-      // FrameLookupTable indexes frames 1-based.
-      framePaths.set(i + 1, join(outputDir, frameName));
+      framePaths.set(i, join(outputDir, frameName));
     }
     result.push({
       videoId: v.videoId,
